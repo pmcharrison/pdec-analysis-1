@@ -1,4 +1,4 @@
-get_df_stimuli <- function(files, df_trials) {
+get_df_stimuli <- function(files) {
   map2(files$stimuli$subj, files$stimuli$path, function(subj, path) {
     if (!file.exists(path)) {
       stopifnot(is_missing_subj(subj))
