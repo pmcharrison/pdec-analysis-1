@@ -29,5 +29,6 @@ dat %>%
   scale_color_manual("Condition", values = c("black", "blue")) + 
   scale_linetype_discrete("Type") + 
   theme(aspect.ratio = 1)
-
+ggsave("fig-1--ideal-model--rt-by-block-and-cond.pdf", path = "output",
+       width = 4.5, height = 4)
  
