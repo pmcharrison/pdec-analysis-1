@@ -4,6 +4,7 @@ library(changepoint)
 library(zeallot)
 
 loadNamespace("memoise")
+loadNamespace("plyr")
 
 if (!dir.exists("cache")) dir.create("cache")
 
