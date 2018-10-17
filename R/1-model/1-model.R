@@ -10,7 +10,7 @@ par <- list(order_bound = 10L,
 
 dat <- readRDS(file = "output/data-01-participants.rds")
 # dat <- dat %>% filter(subj < 4 & trialN < 4 & block == 2) # for testing only
-dat <- dat %>% filter(subj < 4) # for testing only
+# dat <- dat %>% filter(subj < 4) # for testing only
 
 alphabet <- readRDS(file = "output/alphabet.rds")
 
