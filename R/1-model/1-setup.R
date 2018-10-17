@@ -5,6 +5,7 @@ library(zeallot)
 
 loadNamespace("memoise")
 loadNamespace("plyr")
+loadNamespace("yaml")
 
 if (!dir.exists("cache")) dir.create("cache")
 

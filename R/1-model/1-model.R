@@ -1,6 +1,8 @@
 source("R/1-model/1-setup.R")
 
-par <- list(order_bound = 10L,
+par <- list(ppm_order_bound = 10L,
+            ppm_shortest_deterministic = FALSE,
+            ppm_update_exclusion = FALSE,
             seq_length = 20L, # number of tones
             tone_length = 0.05, # seconds
             cp_method = "AMOC",
@@ -27,4 +29,5 @@ dat <- dat %>%
 dat <- add_change_points(dat, ic_col = "idyom_ic", label = "idyom", par = par)
 
 saveRDS(dat, "output/data-02-models.rds")
+yaml::write_yaml(par, "output/data-02-models.yaml")
 
