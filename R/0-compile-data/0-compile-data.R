@@ -1,4 +1,4 @@
-source("R/0-compile-data/setup.R")
+source("R/0-compile-data/0-setup.R")
 
 par <- list(seq_len = 140L,
             max_block = 7L) # Filter out data for max_block > 7
@@ -28,5 +28,5 @@ check_df(df)
 alphabet <- get_alphabet(df)
 
 if (!dir.exists("output")) dir.create("output")
-saveRDS(df, "output/participant-data.rds")
+saveRDS(df, "output/data-01-participants.rds")
 saveRDS(alphabet, "output/alphabet.rds")
