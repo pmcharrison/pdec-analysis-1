@@ -1,6 +1,7 @@
 source("R/1-model/1-setup.R")
 
-par <- list(ppm_order_bound = 10L,
+par <- list(ppm_escape = "A",
+            ppm_order_bound = 10L,
             ppm_shortest_deterministic = FALSE,
             ppm_update_exclusion = FALSE,
             seq_length = 20L, # number of tones

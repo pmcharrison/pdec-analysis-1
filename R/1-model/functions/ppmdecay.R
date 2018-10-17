@@ -8,7 +8,7 @@ ic_subj <- function(seqs, alphabet, par, subj) {
       order_bound = par$ppm_order_bound,
       shortest_deterministic = par$ppm_shortest_deterministic,
       update_exclusion = par$ppm_update_exclusion,
-      escape = par$ppm
+      escape = par$ppm_escape
     ))
   }, .progress = "text")
 }
