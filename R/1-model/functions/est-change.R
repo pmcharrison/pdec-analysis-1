@@ -1,28 +1,38 @@
 est_change <- function(information_content, par) {
-  final_est <- as.integer(NA)
-  for (i in seq(from = par$cp_burn_in, to = length(information_content))) {
-    c(est, conf) %<-% changepoint::cpt.mean(information_content[1:i], 
-                                            method = par$cp_method, 
-                                            penalty = par$cp_penalty,
-                                            class = FALSE) %>% as.list
-    if (conf >= par$cp_threshold && est >= par$cp_burn_in) {
-      final_est <- as.integer(est)
-      break
+  map_dfr(seq_along(information_content), function(i) {
+    if (i <= par$cp_burn_in) {
+      location <- as.integer(NA)
+      conf <- as.numeric(NA)
+    } else {
+      c(location, conf) %<-% changepoint::cpt.mean(information_content[1:i], 
+                                                   method = par$cp_method, 
+                                                   penalty = par$cp_penalty,
+                                                   class = FALSE) %>% as.list
+      # Could also do Bayesian changepoint analysis (bcp package)
+      # though that would be pretty slow
     }
-  }
-  final_est
+    tibble(cp_location = location, cp_conf = conf)
+  })
 }
 
+est_change <- memoise::memoise(est_change, cache = memoise::cache_filesystem("cache/est_change"))
+
 add_change_points <- function(dat, ic_col, label, par) {
-  est <- map(dat[[ic_col]], pull, "information_content") %>% 
-    map_int(est_change, par)
-  detected <- !is.na(est)
-  lag <- est - (dat$transition + 1) # because transition is 0-indexed??
-  warning("Check definition of lag")
-  
+  message("Computing change points for all participants...")
+  dat[[ic_col]] <- plyr::llply(dat[[ic_col]], function(ic) {
+    bind_cols(ic,
+              est_change(ic$information_content, par))
+  }, .progress = "text")
+  location <- map_int(dat[[ic_col]], function(ic) {
+    which(ic$cp_conf >= par$cp_threshold)[1]
+  })
+  detected <- !is.na(location)
+  num_tones <- location - (dat$transition + par$seq_length)
+  reaction_time <- num_tones * par$tone_length
   dat[[paste0(label, "_cp_detected")]] <- detected
-  dat[[paste0(label, "_cp_estimate")]] <- est
-  dat[[paste0(label, "_cp_lag")]] <- lag
+  dat[[paste0(label, "_cp_location")]] <- location
+  dat[[paste0(label, "_cp_num_tones")]] <- num_tones
+  dat[[paste0(label, "_cp_reaction_time")]] <- reaction_time
   dat
 }
 

@@ -1,13 +1,16 @@
-source("R/1-model/setup.R")
+source("R/1-model/1-setup.R")
 
 par <- list(order_bound = 10L,
+            seq_length = 20L, # number of tones
+            tone_length = 0.05, # seconds
             cp_method = "AMOC",
             cp_penalty = "SIC",
             cp_threshold = 0.2,
             cp_burn_in = 30L)
 
-dat <- readRDS(file = "output/participant-data.rds")
-dat <- dat %>% filter(subj < 4 & trialN < 4 & block == 2) # for testing only
+dat <- readRDS(file = "output/data-01-participants.rds")
+# dat <- dat %>% filter(subj < 4 & trialN < 4 & block == 2) # for testing only
+dat <- dat %>% filter(subj < 4) # for testing only
 
 alphabet <- readRDS(file = "output/alphabet.rds")
 
@@ -19,7 +22,9 @@ dat <- dat %>%
   mutate(idyom_ic = ic_subj(seq,
                             alphabet = !!alphabet,
                             par = !!par,
-                            msg = sprintf("finished analysing subject %i...", 
-                                          unique(subj))))
+                            sub = unique(subj))) %>% 
+  ungroup()
 dat <- add_change_points(dat, ic_col = "idyom_ic", label = "idyom", par = par)
+
+saveRDS(dat, "output/data-02-models.rds")
 
