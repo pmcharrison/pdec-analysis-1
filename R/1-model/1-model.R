@@ -8,7 +8,7 @@ par <- list(ppm_escape = "A",
             tone_length = 0.05, # seconds
             cp_method = "AMOC",
             cp_penalty = "SIC",
-            cp_threshold = 0.2,
+            cp_threshold = 0.9,
             cp_burn_in = 30L)
 
 dat <- readRDS(file = "output/data-01-participants.rds")
