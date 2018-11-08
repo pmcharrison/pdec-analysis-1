@@ -52,4 +52,25 @@ plot(p2)
 ggsave("fig-2--ideal-model--model-rt-by-cond.pdf", path = "output",
        width = 4, height = 4)
 
-         
+dat %>%
+  filter(subj == 1 & cond == "RANDREG") %>% 
+  select(transition, idyom_ic) %>% 
+  mutate(trial_id = seq_along(transition)) %>% 
+  by_row(function(x) {
+    x$idyom_ic[[1]] %>% 
+      select(information_content) %>% 
+      mutate(trial_id = x$trial_id,
+             when = seq_along(information_content) - x$transition) %>% 
+      filter(- 10 <= when & when <= 30)
+  }, .collate = "rows", .labels = FALSE) %>% 
+  select(information_content, when) %>% 
+  group_by(when) %>% 
+  summarise_all(funs(mean = mean, sd = sd, n = length, se = sd / sqrt(n),
+                     ymin = mean - se, ymax = mean + se)) %>% 
+  ggplot(aes(x = when, y = mean, ymin = ymin, ymax = ymax)) + 
+  geom_line() + 
+  geom_ribbon(alpha = 0.25, fill = "blue") +
+  scale_x_continuous("Tone number (relative to transition)") + 
+  scale_y_continuous("Information content (bits/tone)") + 
+  theme(aspect.ratio = 1)
+  View
