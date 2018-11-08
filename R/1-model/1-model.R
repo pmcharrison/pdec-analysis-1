@@ -1,6 +1,6 @@
 source("R/1-model/1-setup.R")
 
-par <- list(ppm_escape = "A",
+par <- list(ppm_escape = "C",
             ppm_order_bound = 10L,
             ppm_shortest_deterministic = FALSE,
             ppm_update_exclusion = FALSE,
@@ -14,6 +14,7 @@ par <- list(ppm_escape = "A",
 dat <- readRDS(file = "output/data-01-participants.rds")
 # dat <- dat %>% filter(subj < 4 & trialN < 4 & block == 2) # for testing only
 # dat <- dat %>% filter(subj < 4) # for testing only
+dat <- dat %>% filter(subj == 1) # for testing only
 
 alphabet <- readRDS(file = "output/alphabet.rds")
 
@@ -31,4 +32,3 @@ dat <- add_change_points(dat, ic_col = "idyom_ic", label = "idyom", par = par)
 
 saveRDS(dat, "output/data-02-models.rds")
 yaml::write_yaml(par, "output/data-02-models.yaml")
-
