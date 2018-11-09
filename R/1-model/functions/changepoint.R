@@ -27,7 +27,7 @@ add_change_points <- function(dat, ic_col, label, par) {
     which(ic$cp_conf >= par$cp_threshold)[1]
   })
   detected <- !is.na(location)
-  num_tones <- location - (dat$transition + par$seq_length)
+  num_tones <- location - dat$transition
   reaction_time <- num_tones * par$tone_length
   dat[[paste0(label, "_cp_detected")]] <- detected
   dat[[paste0(label, "_cp_location")]] <- location
