@@ -1,6 +1,7 @@
 source("R/2-plot/2-setup.R")
 
 dat <- readRDS("output/data-02-models.rds")
+# dat <- readRDS("output/archive/escape-c/data-02-models.rds")
 
 p1 <- dat %>% 
   select(subj, cond, block, RTadj, idyom_cp_reaction_time) %>% 
@@ -68,9 +69,11 @@ dat %>%
   summarise_all(funs(mean = mean, sd = sd, n = length, se = sd / sqrt(n),
                      ymin = mean - se, ymax = mean + se)) %>% 
   ggplot(aes(x = when, y = mean, ymin = ymin, ymax = ymax)) + 
+  geom_point() + 
   geom_line() + 
   geom_ribbon(alpha = 0.25, fill = "blue") +
   scale_x_continuous("Tone number (relative to transition)") + 
   scale_y_continuous("Information content (bits/tone)") + 
   theme(aspect.ratio = 1)
-  View
+ggsave("fig-3--ideal-model--p1-ic-by-tone.pdf", path = "output",
+       width = 4, height = 4)
