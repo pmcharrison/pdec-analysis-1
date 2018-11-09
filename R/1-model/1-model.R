@@ -1,6 +1,6 @@
 source("R/1-model/1-setup.R")
 
-par <- list(ppm_escape = "C",
+par <- list(ppm_escape = "A",
             ppm_order_bound = 10L,
             ppm_shortest_deterministic = FALSE,
             ppm_update_exclusion = FALSE,
@@ -8,13 +8,13 @@ par <- list(ppm_escape = "C",
             tone_length = 0.05, # seconds
             cp_method = "AMOC",
             cp_penalty = "SIC",
-            cp_threshold = 0.9,
+            cp_threshold = 0.95,
             cp_burn_in = 30L)
 
 dat <- readRDS(file = "output/data-01-participants.rds")
 # dat <- dat %>% filter(subj < 4 & trialN < 4 & block == 2) # for testing only
 # dat <- dat %>% filter(subj < 4) # for testing only
-dat <- dat %>% filter(subj == 1) # for testing only
+# dat <- dat %>% filter(subj == 1) # for testing only
 
 alphabet <- readRDS(file = "output/alphabet.rds")
 
