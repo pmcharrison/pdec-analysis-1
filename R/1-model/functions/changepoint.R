@@ -21,7 +21,8 @@ add_change_points <- function(dat, ic_col, label, par) {
   message("Computing change points for all participants...")
   dat[[ic_col]] <- plyr::llply(dat[[ic_col]], function(ic) {
     bind_cols(ic,
-              est_change(ic$information_content, par))
+              est_change(ic$information_content, par[c("cp_burn_in", "cp_method",
+                                                       "cp_penalty")]))
   }, .progress = "text")
   location <- map_int(dat[[ic_col]], function(ic) {
     which(ic$cp_conf >= par$cp_threshold)[1]
