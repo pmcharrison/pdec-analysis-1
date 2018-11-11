@@ -1,0 +1,115 @@
+---
+title: "Prediction by Partial Matching with memory decay"
+author:
+  - name: Peter M. C. Harrison
+    url: https://example.com/norajones
+    affiliation: Queen Mary University of London
+  - name: Roberta Bianco
+    affiliation: University College London
+  - name: Marcus T. Pearce
+    affiliation: Queen Mary University of London
+  - name: Maria Chait
+    affiliation: University College London
+date: "`r Sys.Date()`"
+bibliography: "bib.bib"
+output: radix::radix_article
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "output") })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(PPMdecay)
+library(svglite)
+library(tidyverse)
+requireNamespace("cowplot")
+```
+
+Humans can quickly detect regularities in novel auditory sequences
+through online statistical learning and probabilistic prediction [@Barascud2016].
+The Prediction by Partial Matching (PPM) algorithm [@Cleary1984],
+particularly as formalised by @Pearce2005,
+has proved capable of modelling these cognitive processes [@Barascud2016]. 
+PPM is a prominent variable-order Markov model from the data compression literature,
+whose power comes from capturing both low- and high-order Markovian dependencies 
+in sequential data.
+However, PPM has two important limitations as a cognitive model:
+a) perfect memory, and b) inflexible learning rates.
+Here we generalise PPM to address both of these limitations.
+Our formulation centres on a customisable memory decay function,
+which defines how training data is weighted as a function of time elapsed.
+We show that a three-parameter exponential model provides
+a useful family of decay functions, parametrising 
+a) the short-term learning rate,
+b) the long-term learning rate,
+and c) the half-life of short-term memory.
+We demonstrate the application of this model to recent data from sequence detection paradigms,
+and show that the model successfully captures important aspects of human performance.
+We anticipate that our approach should prove useful
+for modelling sequence perception in a variety of contexts,
+including language and music.
+
+## Algorithm
+
+Our algorithm begins with the PPM formulation of @Pearce2005.
+This algorithm makes predictions from learned 
+transition counts $c(x \,\vert\, \mathbf{y})$,
+corresponding to the number of times the symbol $x$
+was observed after the sequence $\mathbf{y}$.
+<!-- These transition counts are subsequently used to generate predictions. -->
+We rewrite these transition counts as 
+
+$$
+c(x \, \vert \, \mathbf{y}) \rightarrow \sum_{i=1}^{c(x \, \vert \, \mathbf{y})} w(t-t_i(x \,\vert\, \mathbf{y})),
+$$
+where $w$ is a *weight decay function*,
+$t$ is the time of prediction generation,
+and $t_i(x \,\vert\, \mathbf{y})$ is the time 
+of the $i$th observation of $x \,\vert\, \mathbf{y}$.
+This has the effect of weighting each datum by 
+a function of the time elapsed since its observation.
+
+Given a continuous decay function,
+it is desirable that output probabilities should be 
+a *continuous* function of time elapsed.
+This requires the following modifications to the PPM algorithm:
+a) disabling exclusion,
+b) disabling update exclusion,
+c) adopting escape method A,
+and d) avoiding the PPM* state selection method 
+(see @Pearce2005 for details).
+
+## Decay functions
+
+A wide variety of decay functions are possible,
+but here we consider the following three-parameter exponential model,
+
+$$
+w(t) = b + (a - b) \exp {\left( - \frac{\ln 2}{c}t \right)},
+$$
+
+where:
+
+- $w(t)$ is the weight assigned to a datum observed $t$ time units ago;
+- $a$, termed the *short-term learning rate*, is the weight at $t = 0$;
+- $b$, termed the *long-term learning rate*, is the limiting weight as $t \rightarrow \infty$;
+- $c$, termed the *short-term memory half-life*,
+is the time taken for the weight to decay half the distance to $b$.
+
+```{r, cache = TRUE, dev = "svglite", fig.cap = "Four example decay functions. a) Null decay function, corresponds to original PPM algorithm. b) The previous decay function, but with a short-term learning rate of 0.75. c) The previous decay function, but with a short-term memory half-life of 50. d) The previous decay function, but with a long-term learning rate of 0.1."}
+f <- list(decay_none, 
+          decay_exp(start = 0.75, end = 0.75), 
+          decay_exp(start = 0.75, end = 0),
+          decay_exp(start = 0.75, end = 0.1))
+map(f, plot2, x_max = 200) %>% 
+  cowplot::plot_grid(plotlist = ., ncol = 2,
+                     labels = "auto")
+```
+
+## Example application
+
+
+
+
+
