@@ -1,7 +1,7 @@
 source("R/2-plot/2-setup.R")
 
 dat <- readRDS("output/data-02-models.rds")
-# dat <- readRDS("output/archive/escape-c/data-02-models.rds")
+# dat <- readRDS("output/archive/escape-a/data-02-models.rds")
 
 p1 <- dat %>% 
   select(subj, cond, block, RTadj, idyom_cp_reaction_time) %>% 
@@ -54,7 +54,7 @@ ggsave("fig-2--ideal-model--model-rt-by-cond.pdf", path = "output",
        width = 4, height = 4)
 
 dat %>%
-  filter(subj == 1 & cond == "RANDREG") %>% 
+  filter(subj == 1 & cond == "TARGET" & block == 6) %>% 
   select(transition, idyom_ic) %>% 
   mutate(trial_id = seq_along(transition)) %>% 
   by_row(function(x) {
@@ -67,7 +67,7 @@ dat %>%
   select(information_content, when) %>% 
   group_by(when) %>% 
   summarise_all(funs(mean = mean, sd = sd, n = length, se = sd / sqrt(n),
-                     ymin = mean - se, ymax = mean + se)) %>% 
+                     ymin = mean - sd, ymax = mean + sd)) %>% 
   ggplot(aes(x = when, y = mean, ymin = ymin, ymax = ymax)) + 
   geom_point() + 
   geom_line() + 
