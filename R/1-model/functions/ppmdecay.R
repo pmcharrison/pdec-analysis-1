@@ -36,7 +36,6 @@ add_idyom_ic <- function(dat, alphabet, par) {
 
 
 ic_subj <- function(seqs, alphabet, par, subj) {
-  browser()
   stopifnot(is.list(seqs))
   mod <- new_model(alphabet = alphabet, max_order_bound = par$order_bound)
   

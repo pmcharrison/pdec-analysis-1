@@ -77,3 +77,35 @@ dat %>%
   theme(aspect.ratio = 1)
 ggsave("fig-3--ideal-model--p1-ic-by-tone.pdf", path = "output",
        width = 4, height = 4)
+
+dat %>%
+  filter(cond == "TARGET" & rep == 1 & block %in% c(1, 2)) %>% 
+  by_row(function(x) {
+    mods <- c("mod_null", "mod_manual")
+    map_dfr(mods, function(mod) {
+      x[[mod]][[1]] %>% 
+        select(information_content) %>% 
+        mutate(mod = mod,
+               block = x$block,
+               when = seq_along(information_content) - x$transition) %>% 
+        filter(- 10 <= when & when <= 30)
+    })
+  }, .collate = "rows", .labels = FALSE) %>% 
+  select(- .row) %>% 
+  group_by(when, block, mod) %>% 
+  summarise_all(funs(mean = mean, sd = sd, n = length, se = sd / sqrt(n),
+                     ymin = mean - sd, ymax = mean + sd)) %>% 
+  ungroup() %>% 
+  mutate(block = paste("Block", block),
+         mod = recode(mod,
+                      mod_manual = "PPM decay",
+                      mod_null = "PPM (original)")) %>%
+  ggplot(aes(x = when, y = mean, ymin = ymin, ymax = ymax)) + 
+  facet_grid(mod ~ block) + 
+  geom_line() + 
+  geom_vline(xintercept = 0, linetype = "dotted") + 
+  geom_vline(xintercept = 20, linetype = "dotted") + 
+  geom_ribbon(alpha = 0.25, fill = "blue") +
+  scale_x_continuous("Tone number (relative to transition)") + 
+  scale_y_continuous("Information content (bits/tone)") + 
+  theme(aspect.ratio = 1)

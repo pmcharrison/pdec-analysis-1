@@ -5,3 +5,8 @@
 output
 cache
 tech-report_cache
+packrat/lib*/
+tech-report.docx
+tech-report.html
+tech-report_files
+~$ch-report.docx

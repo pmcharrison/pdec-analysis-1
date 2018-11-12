@@ -6,25 +6,34 @@ author:
     affiliation: Queen Mary University of London
   - name: Roberta Bianco
     affiliation: University College London
-  - name: Marcus T. Pearce
-    affiliation: Queen Mary University of London
   - name: Maria Chait
     affiliation: University College London
-date: "`r Sys.Date()`"
+  - name: Marcus T. Pearce
+    affiliation: Queen Mary University of London
 bibliography: "bib.bib"
-output: radix::radix_article
+output:
+  radix::radix_article: default
+  bookdown::word_document2: default
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "output") })
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+if (knitr::is_html_output()) {
+  knitr::opts_chunk$set(echo = FALSE, dev = "svglite") # Radix
+} else {
+  knitr::opts_chunk$set(echo = FALSE, dpi = 300) # Word 
+}
 library(ggplot2)
 library(PPMdecay)
 library(svglite)
 library(tidyverse)
 requireNamespace("cowplot")
+source(file = "R/2-plot/2-setup.R")
+dat <- readRDS("output/data-02-models.rds")
 ```
+
+<!-- <script src="https://hypothes.is/embed.js" async></script> -->
 
 Humans can quickly detect regularities in novel auditory sequences
 through online statistical learning and probabilistic prediction [@Barascud2016].
@@ -97,7 +106,7 @@ where:
 - $c$, termed the *short-term memory half-life*,
 is the time taken for the weight to decay half the distance to $b$.
 
-```{r, cache = TRUE, dev = "svglite", fig.cap = "Four example decay functions. a) Null decay function, corresponds to original PPM algorithm. b) The previous decay function, but with a short-term learning rate of 0.75. c) The previous decay function, but with a short-term memory half-life of 50. d) The previous decay function, but with a long-term learning rate of 0.1."}
+```{r, cache = TRUE, fig.cap = "Four example decay functions. a) Null decay function, corresponds to original PPM algorithm. b) The previous decay function, but with a short-term learning rate of 0.75. c) The previous decay function, but with a short-term memory half-life of 50. d) The previous decay function, but with a long-term learning rate of 0.1."}
 f <- list(decay_none, 
           decay_exp(start = 0.75, end = 0.75), 
           decay_exp(start = 0.75, end = 0),
@@ -109,7 +118,92 @@ map(f, plot2, x_max = 200) %>%
 
 ## Example application
 
+Here we apply the algorithm to a new behavioural dataset on pattern detection.
+Each trial comprised a fast sequence of tones,
+organised into two phases: a random phase and a regular phase.
+In the random phase, tones were selected pseudo-randomly;
+in the regular phase, tones were organised into repeating patterns of length 20.
+Participants had to detect the phase transition as fast as possible.
 
+In Block 1, all regular patterns were novel.^[
+For simplicity, this analysis only considers the first repetition in each block.
+]
+The transition could therefore be detected shortly after 20 tones
+past the phase transition,
+at which point the sequence started repeating its values from 20 timesteps ago.
 
+In Block 2, all regular patterns were repeated from Block 1.
+Theoretically, this repetition could be used to detect the phase transition almost immediately,
+cued by recognising the pattern from the previous block.
 
+Correspondingly, participants did exhibit facilitated performance in Block 2.
+The effect wasn't extreme -- they didn't notice the phase transitions immediately --
+but clearly some long-term memory effect facilitated transition recognition.
 
+Figure \@ref(fig:analysis1) shows a simulation of this experiment.
+*Information content*, or surprisal, is plotted as a function of tone number.
+Information content provides a clear cue to phase transitions,
+with high information content identifying the random phase,
+and low information content identifying the regular phase.
+
+The top row of Figure \@ref(fig:analysis1) corresponds to the original PPM model.
+In Block 1, the phase transition becomes salient soon after tone 20, 
+as expected.
+In Block 2, the phase transition becomes salient almost immediately,
+because the pattern is immediately recognised from Block 1.
+The model markedly outperforms human listeners.
+
+The second row of Figure \@ref(fig:analysis1) corresponds to the PPM decay model
+with customised decay function 
+(short-term learning rate = 0.15, long-term learning rate = 0.0005,
+short-term memory half-life = 50 tones).
+In Block 1, we see that the information content profile is much more predictable.
+This reflects the low short-term learning rate;
+as a result, the model overfits less to the random sequence, 
+and therefore exhibits less error.
+In Block 2, the phase transition is no longer recognised immediately.
+Instead, as information accumulates,
+the phase transition becomes gradually clearer between tones 10 and 20.
+If the transition is not detected by tone 20, it is certainly detected
+very soon after.
+This behaviour much better approximates human responses.
+
+```{r analysis1, cache = TRUE, fig.cap = "Example analysis comparing the original PPM model to a PPM decay model. See text for details. The black lines plot mean values, and the blue ribbons plot standard deviations."}
+dat %>%
+  filter(cond == "TARGET" & rep == 1 & block %in% c(1, 2)) %>% 
+  by_row(function(x) {
+    mods <- c("mod_null", "mod_manual")
+    map_dfr(mods, function(mod) {
+      x[[mod]][[1]] %>% 
+        select(information_content) %>% 
+        mutate(mod = mod,
+               block = x$block,
+               when = seq_along(information_content) - x$transition) %>% 
+        filter(- 10 <= when & when <= 30)
+    })
+  }, .collate = "rows", .labels = FALSE) %>% 
+  select(- .row) %>% 
+  group_by(when, block, mod) %>% 
+  summarise_all(funs(mean = mean, sd = sd, n = length, se = sd / sqrt(n),
+                     ymin = mean - sd, ymax = mean + sd)) %>% 
+  ungroup() %>% 
+  mutate(block = paste("Block ", block),
+         mod = recode_factor(mod,
+                             mod_null = "PPM original",
+                             mod_manual = "PPM decay")) %>%
+  ggplot(aes(x = when, y = mean, ymin = ymin, ymax = ymax)) + 
+  facet_grid(mod ~ block) + 
+  geom_line() + 
+  geom_vline(xintercept = 0, linetype = "dotted") + 
+  geom_vline(xintercept = 20, linetype = "dotted") + 
+  geom_ribbon(alpha = 0.25, fill = "blue") +
+  scale_x_continuous("Tone number (relative to transition)") + 
+  scale_y_continuous("Information content (bits/tone)") + 
+  theme(aspect.ratio = 1)
+```
+
+```{r, results = "asis"}
+if (!knitr::is_html_output()) {
+  cat("## References\n")
+} 
+```

@@ -1,4 +1,4 @@
 library(tidyverse)
 library(purrrlyr)
 
-theme_set(theme_bw())
+theme_set(theme_classic())

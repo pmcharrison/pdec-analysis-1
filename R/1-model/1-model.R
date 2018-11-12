@@ -2,7 +2,7 @@ source("R/1-model/1-setup.R")
 
 par <- list(
   mod = list(
-    # mod_null = ppm_par(),
+    mod_null = ppm_par(),
     mod_manual = ppm_par(half_life = 50,
                          start = 0.15,
                          end = 0.0005)
