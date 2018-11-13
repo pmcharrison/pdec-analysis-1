@@ -9,13 +9,14 @@ author:
   - name: Maria Chait
     affiliation: University College London
   - name: Marcus T. Pearce
-    affiliation: Queen Mary University of London
+    affiliation: Queen Mary University of London; Aarhus University
 bibliography: "bib.bib"
 output:
   radix::radix_article: default
   bookdown::word_document2: default
 knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "output") })
+  rmarkdown::render(inputFile, encoding = encoding, 
+  output_dir = "output", output_format = "all") })
 ---
 
 ```{r setup, include=FALSE}
@@ -37,23 +38,23 @@ dat <- readRDS("output/data-02-models.rds")
 
 Humans can quickly detect regularities in novel auditory sequences
 through online statistical learning and probabilistic prediction [@Barascud2016].
-The Prediction by Partial Matching (PPM) algorithm [@Cleary1984],
+The Prediction by Partial Match (PPM) algorithm [@Cleary1984],
 particularly as formalised by @Pearce2005,
 has proved capable of modelling these cognitive processes [@Barascud2016]. 
 PPM is a prominent variable-order Markov model from the data compression literature,
 whose power comes from capturing both low- and high-order Markovian dependencies 
 in sequential data.
-However, PPM has two important limitations as a cognitive model:
+However, PPM lacks cognitive realism in two important ways:
 a) perfect memory, and b) inflexible learning rates.
 Here we generalise PPM to address both of these limitations.
 Our formulation centres on a customisable memory decay function,
-which defines how training data is weighted as a function of time elapsed.
+which defines how training data are weighted as a function of time elapsed.
 We show that a three-parameter exponential model provides
 a useful family of decay functions, parametrising 
 a) the short-term learning rate,
 b) the long-term learning rate,
 and c) the half-life of short-term memory.
-We demonstrate the application of this model to recent data from sequence detection paradigms,
+We demonstrate the application of this model to recent data from sequence detection paradigms [e.g. @Barascud2016],
 and show that the model successfully captures important aspects of human performance.
 We anticipate that our approach should prove useful
 for modelling sequence perception in a variety of contexts,
@@ -106,14 +107,14 @@ where:
 - $c$, termed the *short-term memory half-life*,
 is the time taken for the weight to decay half the distance to $b$.
 
-```{r, cache = TRUE, fig.cap = "Four example decay functions. a) Null decay function, corresponds to original PPM algorithm. b) The previous decay function, but with a short-term learning rate of 0.75. c) The previous decay function, but with a short-term memory half-life of 50. d) The previous decay function, but with a long-term learning rate of 0.1."}
+```{r, cache = TRUE, fig.cap = "Four example decay functions. a) Null decay function, corresponds to original PPM algorithm. b) As in A, but with a short-term learning rate of a = 0.75. c) As in B, but with a short-term memory half-life of c = 50. d) As in C, but with a long-term learning rate of d = 0.1."}
 f <- list(decay_none, 
           decay_exp(start = 0.75, end = 0.75), 
           decay_exp(start = 0.75, end = 0),
           decay_exp(start = 0.75, end = 0.1))
 map(f, plot2, x_max = 200) %>% 
   cowplot::plot_grid(plotlist = ., ncol = 2,
-                     labels = "auto")
+                     labels = "AUTO")
 ```
 
 ## Example application
@@ -154,7 +155,7 @@ because the pattern is immediately recognised from Block 1.
 The model markedly outperforms human listeners.
 
 The second row of Figure \@ref(fig:analysis1) corresponds to the PPM decay model
-with customised decay function 
+with an example decay function that better approximates human behaviour.
 (short-term learning rate = 0.15, long-term learning rate = 0.0005,
 short-term memory half-life = 50 tones).
 In Block 1, we see that the information content profile is much more predictable.
