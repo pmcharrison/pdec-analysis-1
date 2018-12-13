@@ -1,8 +1,7 @@
 ---
-title: "Prediction by Partial Matching with memory decay"
+title: "Detection of structural regularities in rapid sound sequences: Computational modelling of memory constraints in auditory prediction"
 author:
   - name: Peter M. C. Harrison
-    url: https://example.com/norajones
     affiliation: Queen Mary University of London
   - name: Roberta Bianco
     affiliation: University College London
@@ -36,6 +35,12 @@ dat <- readRDS("output/data-02-models.rds")
 
 <!-- <script src="https://hypothes.is/embed.js" async></script> -->
 
+```{r, results = "asis"}
+if (!knitr::is_html_output()) {
+  cat("*Peter M. C. Harrison; Roberta Bianco; Maria Chait; Marcus T. Pearce*\n")
+} 
+```
+
 Humans can quickly detect regularities in novel auditory sequences
 through online statistical learning and probabilistic prediction [@Barascud2016].
 The Prediction by Partial Match (PPM) algorithm [@Cleary1984],
@@ -45,7 +50,7 @@ PPM is a prominent variable-order Markov model from the data compression literat
 whose power comes from capturing both low- and high-order Markovian dependencies 
 in sequential data.
 However, PPM lacks cognitive realism in two important ways:
-a) perfect memory, and b) inflexible learning rates.
+a) its perfect memory, and b) its inflexible learning rates.
 Here we generalise PPM to address both of these limitations.
 Our formulation centres on a customisable memory decay function,
 which defines how training data are weighted as a function of time elapsed.
@@ -54,7 +59,8 @@ a useful family of decay functions, parametrising
 a) the short-term learning rate,
 b) the long-term learning rate,
 and c) the half-life of short-term memory.
-We demonstrate the application of this model to recent data from sequence detection paradigms [e.g. @Barascud2016],
+We demonstrate the application of this model to recent data from 
+sequence perception paradigms [e.g. @Barascud2016],
 and show that the model successfully captures important aspects of human performance.
 We anticipate that our approach should prove useful
 for modelling sequence perception in a variety of contexts,
@@ -62,8 +68,8 @@ including language and music.
 
 ## Algorithm
 
-Our algorithm begins with the PPM formulation of @Pearce2005.
-This algorithm makes predictions from learned 
+Our algorithm begins with PPM as formulated by @Pearce2005.
+The original PPM algorithm makes predictions from learned 
 transition counts $c(x \,\vert\, \mathbf{y})$,
 corresponding to the number of times the symbol $x$
 was observed after the sequence $\mathbf{y}$.
@@ -88,7 +94,7 @@ a) disabling exclusion,
 b) disabling update exclusion,
 c) adopting escape method A,
 and d) avoiding the PPM* state selection method 
-(see @Pearce2005 for details).
+[see @Pearce2005 for details].
 
 ## Decay functions
 
@@ -107,7 +113,7 @@ where:
 - $c$, termed the *short-term memory half-life*,
 is the time taken for the weight to decay half the distance to $b$.
 
-```{r, cache = TRUE, fig.cap = "Four example decay functions. a) Null decay function, corresponds to original PPM algorithm. b) As in A, but with a short-term learning rate of a = 0.75. c) As in B, but with a short-term memory half-life of c = 50. d) As in C, but with a long-term learning rate of d = 0.1."}
+```{r, cache = TRUE, fig.cap = "Four example decay functions. A) Null decay function, corresponding to the original PPM algorithm. B) As in A, but with a short-term learning rate of a = 0.75. C) As in B, but with a short-term memory half-life of c = 50. D) As in C, but with a long-term learning rate of d = 0.1."}
 f <- list(decay_none, 
           decay_exp(start = 0.75, end = 0.75), 
           decay_exp(start = 0.75, end = 0),
@@ -158,7 +164,8 @@ The second row of Figure \@ref(fig:analysis1) corresponds to the PPM decay model
 with an example decay function that better approximates human behaviour.
 (short-term learning rate = 0.15, long-term learning rate = 0.0005,
 short-term memory half-life = 50 tones).
-In Block 1, we see that the information content profile is much more predictable.
+In Block 1, we see that information content in the random phase is 
+systematically lower and less variable.
 This reflects the low short-term learning rate;
 as a result, the model overfits less to the random sequence, 
 and therefore exhibits less error.
@@ -169,7 +176,7 @@ If the transition is not detected by tone 20, it is certainly detected
 very soon after.
 This behaviour much better approximates human responses.
 
-```{r analysis1, cache = TRUE, fig.cap = "Example analysis comparing the original PPM model to a PPM decay model. See text for details. The black lines plot mean values, and the blue ribbons plot standard deviations."}
+```{r analysis1, cache = TRUE, fig.cap = "Example analysis comparing the original PPM model to a PPM decay model. See main text for details. The black lines plot mean values, and the blue ribbons plot standard deviations."}
 dat %>%
   filter(cond == "TARGET" & rep == 1 & block %in% c(1, 2)) %>% 
   by_row(function(x) {
