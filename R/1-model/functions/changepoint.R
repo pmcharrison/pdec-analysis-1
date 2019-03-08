@@ -1,63 +1,47 @@
-est_change <- function(information_content, par) {
-  map_dfr(seq_along(information_content), function(i) {
-    if (i <= par$cp_burn_in) {
-      location <- as.integer(NA)
-      conf <- as.numeric(NA)
-    } else {
-      c(location, conf) %<-% changepoint::cpt.mean(information_content[1:i], 
-                                                   method = par$cp_method, 
-                                                   penalty = par$cp_penalty,
-                                                   class = FALSE) %>% as.list
-      # Could also do Bayesian changepoint analysis (bcp package)
-      # though that would be pretty slow
-    }
-    tibble(cp_location = location, cp_conf = conf)
-  })
+cp_trial <- function(row, par) {
+  x <- row$mod[[1]]$information_content
+  stopifnot(is.numeric(x))
+  
+  cp <- cpm::detectChangePoint(x, 
+                               cpmType = par$cp$method, 
+                               ARL0 = par$cp$t1_error_rate,
+                               startup = par$cp$startup)
+  cp_stat <- rep(as.numeric(NA), times = length(x))
+  cp_stat[seq_along(cp$Ds)] <- cp$Ds
+  cp_stat[seq_len(par$cp$startup - 1L)] <- as.numeric(NA)
+  res <- list(
+    statistic = cp_stat,
+    change_detected = cp$changeDetected,
+    pos_when_change_detected = if (cp$changeDetected) cp$detectionTime else as.integer(NA)
+  )
+  res$lag_tones <- res$pos_when_change_detected - (row$transition + length(par$alphabet))
+  res
 }
 
-est_change <- memoise::memoise(est_change, cache = memoise::cache_filesystem("cache/est_change"))
 
-add_change_points <- function(dat, ic_col, label, par) {
+add_change_points <- function(dat, par) {
   message("Computing change points for all participants...")
-  dat[[ic_col]] <- plyr::llply(dat[[ic_col]], function(ic) {
-    bind_cols(ic,
-              est_change(ic$information_content, par[c("cp_burn_in", "cp_method",
-                                                       "cp_penalty")]))
-  }, .progress = "text")
-  location <- map_int(dat[[ic_col]], function(ic) {
-    which(ic$cp_conf >= par$cp_threshold)[1]
-  })
-  detected <- !is.na(location)
-  num_tones <- location - dat$transition
-  reaction_time <- num_tones * par$tone_length
-  dat[[paste0(label, "_cp_detected")]] <- detected
-  dat[[paste0(label, "_cp_location")]] <- location
-  dat[[paste0(label, "_cp_num_tones")]] <- num_tones
-  dat[[paste0(label, "_cp_reaction_time")]] <- reaction_time
+  
+  N <- nrow(dat)
+  
+  dat$mod_change_detected <- rep(as.logical(NA), times = N)
+  dat$mod_pos_when_change_detected <- rep(as.integer(NA), times = N)
+  dat$mod_lag_tones <- rep(as.integer(NA), times = N)
+
+  pb <- utils::txtProgressBar(max = N, style = 3)
+  
+  for (i in seq_len(N)) {
+    cp <- cp_trial(dat[i, ], par)
+    dat$mod[[i]]$cp_statistic <- cp$statistic
+    dat$mod_change_detected[i] <- cp$change_detected
+    dat$mod_pos_when_change_detected[i] <- cp$pos_when_change_detected
+    dat$mod_lag_tones[i] <- cp$lag_tones
+    utils::setTxtProgressBar(pb, i)
+  }
+  close(pb)
+
   dat
 }
 
-# c(full, summary) %<-% map(c(TRUE, FALSE), function(class) {
-#   changepoint::cpt.mean(information_content, 
-#                         method = par$cp_method, 
-#                         penalty = par$cp_penalty,
-#                         class = class)
-# })
-# confidence <- summary["conf.value"] %>% as.numeric
-# detected <- confidence > par$cp_threshold
-# estimate <- as.integer(if (detected) summary["cpt"] else NA)
-# list(full = full, detected = detected, estimate = estimate, confidence = confidence)
-
-# add_change_points <- function(dat, ic_col, label, par) {
-#   d <- map(dat[[ic_col]], pull, "information_content") %>% 
-#     map(est_change, par) %>% 
-#     map(function(x) tibble(full = list(x$full), 
-#                            detected = x$detected,
-#                            estimate = x$estimate, 
-#                            confidence = x$confidence) %>% 
-#           set_names(~ paste(label, ., sep = "_cp_"))) %>% 
-#     bind_rows %>% 
-#     bind_cols(dat, .)
-#   d[[paste0(label, "_cp_lag")]] <- d[[paste0(label, "_cp_estimate")]] - d$transition
-#   d
-# }
+add_change_points <- memoise::memoise(add_change_points, 
+                                      cache = memoise::cache_filesystem("cache/add_change_points"))

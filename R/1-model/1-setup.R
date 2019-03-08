@@ -1,11 +1,12 @@
 library(tidyverse)
 library(PPMdecay)
-library(changepoint)
 library(zeallot)
 
 loadNamespace("memoise")
 loadNamespace("plyr")
 loadNamespace("yaml")
+loadNamespace("cpm")
+
 
 if (!dir.exists("cache")) dir.create("cache")
 
