@@ -20,7 +20,7 @@ cp_trial <- function(row, par) {
 
 
 add_change_points <- function(dat, par) {
-  message("Computing change points for all participants...")
+  message("Computing change points...")
   
   N <- nrow(dat)
   

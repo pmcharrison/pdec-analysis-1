@@ -1,6 +1,5 @@
-add_idyom_ic <- function(dat, par) {
+add_idyom_ic <- function(dat, ppm_par, alphabet, tone_length) {
   stopifnot(order(dat$subj, dat$block, dat$trialN) == seq_len(nrow(dat)))
-  alphabet <- par$alphabet
   
   dat %>% 
     group_by(subj) %>% 
@@ -9,8 +8,9 @@ add_idyom_ic <- function(dat, par) {
       mod = ic_subj(seq, 
                     time,
                     alphabet = !!alphabet,
-                    par = !!par,
-                    sub = unique(subj))
+                    ppm_par = !!ppm_par,
+                    sub = unique(subj),
+                    tone_length = !!tone_length)
     ) %>% 
     ungroup()
 }
@@ -36,18 +36,21 @@ estimate_block_time <- function(block) {
          `7` = 7 * 7 * 24 * 60 * 60)
 }
 
-ic_subj <- function(seqs, start_times, alphabet, par, subj) {
+ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   stopifnot(is.list(seqs), length(subj) == 1)
   
+  print("Instantiating a PPM model with the following parameters: ")
+  print(ppm_par)
+  
   mod <- ppm::new_ppm_decay(alphabet_size = length(alphabet),
-                            order_bound = par$ppm$order_bound,
-                            buffer_length_time = par$ppm$buffer_length_time,
-                            buffer_length_items = par$ppm$buffer_length_items,
-                            buffer_weight = par$ppm$buffer_weight,
-                            stm_half_life = par$ppm$stm_half_life,
-                            stm_weight = par$ppm$stm_weight,
-                            ltm_weight = par$ppm$ltm_weight,
-                            noise = par$ppm$noise)
+                            order_bound = ppm_par[["order_bound"]],
+                            buffer_length_time = ppm_par[["buffer_length_time"]],
+                            buffer_length_items = ppm_par[["buffer_length_items"]],
+                            buffer_weight = ppm_par[["buffer_weight"]],
+                            stm_half_life = ppm_par[["stm_half_life"]],
+                            stm_weight = ppm_par[["stm_weight"]],
+                            ltm_weight = ppm_par[["ltm_weight"]],
+                            noise = ppm_par[["noise"]])
   
   message("Performing information_theoretic analyses on subject ", subj, "...")
 
@@ -60,7 +63,7 @@ ic_subj <- function(seqs, start_times, alphabet, par, subj) {
       model = mod, 
       seq = seq,
       time = seq(from = start_times[i], 
-                 by = par$tone_length, 
+                 by = tone_length, 
                  length.out = length(seqs[[i]]))
     )
     
