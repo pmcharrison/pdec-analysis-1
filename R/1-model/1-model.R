@@ -14,7 +14,6 @@ par <- list(
     order_bound = 10
   ),
   optim = list(
-    # method = "L-BFGS-B",
     which = c("noise", "ltm_weight"),
     lower = c(0, 0),
     upper = c(10, 0.53),
@@ -22,13 +21,6 @@ par <- list(
       maxeval = 50,
       ftol_abs = 0.01
     ),
-    # control = list(
-    #   trace = 6,
-    #   ndeps = c(1e-4, 1e-4),
-    #   parscale = c(100, 1),
-    #   factr = 0.01 / .Machine$double.eps,
-    #   maxit = 20
-    # ),
     na_penalty = 1
   ),
   cp = list(
@@ -43,17 +35,6 @@ dat <- readRDS(file = "output/data-01-participants.rds")
 dat <- dat %>% filter(subj == 1) # for testing only
 
 ppm_optim <- function(dat, par) {
-  # optim(
-  #   par = par$ppm[par$optim$which],
-  #   fn = cost_subj,
-  #   gr = NULL,
-  #   dat, par,
-  #   method = par$optim$method,
-  #   lower = par$optim$lower,
-  #   upper = par$optim$upper,
-  #   control = par$optim$control
-  # )
-  
   nloptr::sbplx(
     x0 = par$ppm[par$optim$which],
     fn = ppm_cost,
