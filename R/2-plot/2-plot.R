@@ -1,14 +1,17 @@
 source("R/2-plot/2-setup.R")
 
 dat <- readRDS("output/data-02-models.rds")
+par <- readRDS("output/data-02-model-par.rds")
 # dat <- readRDS("output/archive/escape-a/data-02-models.rds")
 
-p1 <- dat %>% 
+# p1 <- 
+dat %>% 
+  mutate(idyom_cp_reaction_time = mod_lag_tones * par$tone_length) %>% 
   select(subj, cond, block, RTadj, idyom_cp_reaction_time) %>% 
   filter(!is.na(cond)) %>% 
   group_by(subj, cond, block) %>% 
   summarise_all(funs(mean), na.rm = TRUE) %>% 
-  group_by(cond, block) %>% 
+  group_by(cond, block) %>%
   gather(data_source, reaction_time, RTadj, idyom_cp_reaction_time) %>% 
   select(- subj) %>% 
   group_by(cond, block, data_source) %>%

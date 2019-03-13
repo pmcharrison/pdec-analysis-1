@@ -39,8 +39,15 @@ estimate_block_time <- function(block) {
 ic_subj <- function(seqs, start_times, alphabet, par, subj) {
   stopifnot(is.list(seqs), length(subj) == 1)
   
-  ppm_par <- eval(par$ppm)
-  mod <- PPMdecay::new_model(alphabet = alphabet, max_order_bound = ppm_par$order_bound)
+  mod <- ppm::new_ppm_decay(alphabet_size = length(alphabet),
+                            order_bound = par$ppm$order_bound,
+                            buffer_length_time = par$ppm$buffer_length_time,
+                            buffer_length_items = par$ppm$buffer_length_items,
+                            buffer_weight = par$ppm$buffer_weight,
+                            stm_half_life = par$ppm$stm_half_life,
+                            stm_weight = par$ppm$stm_weight,
+                            ltm_weight = par$ppm$ltm_weight,
+                            noise = par$ppm$noise)
   
   message("Performing information_theoretic analyses on subject ", subj, "...")
 
@@ -48,13 +55,13 @@ ic_subj <- function(seqs, start_times, alphabet, par, subj) {
   pb <- utils::txtProgressBar(max = N, style = 3)
   res <- vector(mode = "list", length = N)
   for (i in seq_len(N)) {
-    res[[i]] <- PPMdecay::predict_seq(
-      mod, 
-      seq = seqs[[i]],
+    seq <- as.integer(factor(seqs[[i]], levels = alphabet)) - 1L
+    res[[i]] <- ppm::model_seq(
+      model = mod, 
+      seq = seq,
       time = seq(from = start_times[i], 
                  by = par$tone_length, 
-                 length.out = length(seqs[[i]])),
-      options = ppm_par
+                 length.out = length(seqs[[i]]))
     )
     
     utils::setTxtProgressBar(pb, value = i)
