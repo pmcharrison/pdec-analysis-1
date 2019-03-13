@@ -28,5 +28,5 @@ check_df(df)
 alphabet <- get_alphabet(df)
 
 if (!dir.exists("output")) dir.create("output")
-saveRDS(df, "output/data-01-participants.rds")
+saveRDS(df, "output/data-00-participants.rds")
 saveRDS(alphabet, "output/alphabet.rds")

@@ -31,46 +31,9 @@ par <- list(
   alphabet = readRDS(file = "output/alphabet.rds")
 )
 
-dat <- readRDS(file = "output/data-01-participants.rds")
-dat <- dat %>% filter(subj == 1) # for testing only
+dat <- readRDS(file = "output/data-00-participants.rds")
 
-ppm_optim <- function(dat, par) {
-  nloptr::sbplx(
-    x0 = par$ppm[par$optim$which],
-    fn = ppm_cost,
-    lower = par$optim$lower,
-    upper = par$optim$upper,
-    nl.info = FALSE,
-    control = par$optim$control,
-    dat, 
-    par
-  )
-}
+res_opt <- conduct_optimisations(dat, par)
 
-ppm_cost <- function(coef, dat, par) {
-  ppm_par <- par$ppm
-  ppm_par[par$optim$which] <- coef
-  dat %>% 
-    add_idyom_ic(ppm_par, par$alphabet, par$tone_length) %>% 
-    add_change_points(par) %>% 
-    mutate(model_reaction_time = mod_lag_tones * par$tone_length) %>% 
-    filter(condition %in% 1:2) %>% 
-    filter(correct) %>% 
-    summarise(cost = mean(abs(model_reaction_time - RTadj), na.rm = TRUE) + 
-                par$optim$na_penalty * mean(is.na(model_reaction_time))) %>% 
-    as.numeric() %>% 
-    print()
-}
-
-x1 <- ppm_optim(dat, par)
-
-
-
-# dat <- dat %>% filter(subj < 4 & trialN < 4 & block == 2) # for testing only
-# dat <- dat %>% filter(subj == 1 & trialN < 4 & block == 1) # for testing only
-
-dat <- add_idyom_ic(dat, par)
-dat <- add_change_points(dat, par = par)
-
-saveRDS(dat, "output/data-02-models.rds")
-saveRDS(par, "output/data-02-model-par.rds")
+saveRDS(res_opt, "output/data-01-optimised-par.rds")
+saveRDS(par, "output/data-01-all-par.rds")

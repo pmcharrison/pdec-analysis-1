@@ -64,7 +64,8 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
       seq = seq,
       time = seq(from = start_times[i], 
                  by = tone_length, 
-                 length.out = length(seqs[[i]]))
+                 length.out = length(seqs[[i]])),
+      return_distribution = FALSE
     )
     
     utils::setTxtProgressBar(pb, value = i)
