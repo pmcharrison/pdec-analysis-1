@@ -33,7 +33,9 @@ par <- list(
 
 dat <- readRDS(file = "output/data-00-participants.rds")
 
-res_opt <- conduct_optimisations(dat, par)
+optimised_par <- conduct_optimisations(dat, par)
+optimised_analyses <- get_optimised_analyses(dat, par, optimised_par)
 
-saveRDS(res_opt, "output/data-01-optimised-par.rds")
+saveRDS(optimised_par, "output/data-01-optimised-par.rds")
 saveRDS(par, "output/data-01-all-par.rds")
+saveRDS(optimised_analyses, "output/data-01-optimised-analyses.rds")
