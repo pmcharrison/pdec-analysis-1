@@ -1,25 +1,66 @@
 source("R/2-plot/2-setup.R")
 
-dat <- readRDS("output/data-02-models.rds")
-par <- readRDS("output/data-02-model-par.rds")
-# dat <- readRDS("output/archive/escape-a/data-02-models.rds")
+par <- readRDS("output/data-01-all-par.rds")
+optimised_par <- readRDS("output/data-01-optimised-par.rds")
+optimised_analyses <- readRDS("output/data-01-optimised-analyses.rds")
+
+
+optimised_analyses
+
+plot_individual_par(optimised_par)
+
+get_cost <- function(dat) {
+  dat %>% 
+    select(subj, cond, block, RTadj, model_reaction_time) %>% 
+    filter(!is.na(cond)) %>% 
+    group_by(subj, cond, block) %>% 
+    summarise_all(funs(mean), na.rm = TRUE) %>% 
+    ungroup() %>% 
+    select(-subj) %>%
+    group_by(cond, block) %>% 
+    summarise_all(funs(mean)) %>% 
+    mutate(err = (model_reaction_time - RTadj) ^ 2) %>% 
+    pull(err) %>% 
+    mean()
+}
+  
+  
+    summarise_all(funs(mean, sd, n = length, se = sd / sqrt(n), 
+                       ymin = mean - se, ymax = mean + se))
+    
+      
+      
+    gather(data_source, reaction_time, RTadj, model_reaction_time) %>% 
+    select(- subj) %>%
+    # group_by(subj, cond, block, data_source) %>%
+    group_by(cond, block, data_source) %>%
+    summarise_all(funs(mean, sd, n = length, se = sd / sqrt(n), 
+                       ymin = mean - se, ymax = mean + se)) %>% 
+    ungroup() 
+    
+}
+
 
 # p1 <- 
-dat %>% 
-  mutate(idyom_cp_reaction_time = mod_lag_tones * par$tone_length) %>% 
-  select(subj, cond, block, RTadj, idyom_cp_reaction_time) %>% 
+# optimised_analyses$combined %>% 
+  
+  
+y %>% 
+  filter(correct) %>% 
+  select(subj, cond, block, RTadj, model_reaction_time) %>% 
   filter(!is.na(cond)) %>% 
   group_by(subj, cond, block) %>% 
   summarise_all(funs(mean), na.rm = TRUE) %>% 
   group_by(cond, block) %>%
-  gather(data_source, reaction_time, RTadj, idyom_cp_reaction_time) %>% 
-  select(- subj) %>% 
+  gather(data_source, reaction_time, RTadj, model_reaction_time) %>% 
+  select(- subj) %>%
+  # group_by(subj, cond, block, data_source) %>%
   group_by(cond, block, data_source) %>%
   summarise_all(funs(mean, sd, n = length, se = sd / sqrt(n), 
                      ymin = mean - se, ymax = mean + se)) %>% 
   ungroup() %>%
   mutate(data_source = recode(data_source,
-                              idyom_cp_reaction_time = "Simulated", 
+                              model_reaction_time = "Simulated", 
                               RTadj = "Observed"),
          cond = recode(cond,
                        RANDREG = "Novel",
@@ -32,20 +73,21 @@ dat %>%
   scale_y_continuous("Reaction time (s)") +
   scale_fill_manual("Condition", values = c("black", "blue")) + 
   scale_color_manual("Condition", values = c("black", "blue")) + 
-  scale_linetype_discrete("Type") + 
+  scale_linetype_discrete("Type")
+  # facet_wrap(~ subj) +
   theme(aspect.ratio = 1)
 plot(p1)
 ggsave("fig-1--ideal-model--rt-by-block-and-cond.pdf", path = "output",
        width = 4.5, height = 4)
 
 p2 <- dat %>% 
-  select(block, cond, idyom_cp_reaction_time) %>% 
+  select(block, cond, model_reaction_time) %>% 
   filter(!is.na(cond)) %>% 
-  filter(!is.na(idyom_cp_reaction_time)) %>% 
+  filter(!is.na(model_reaction_time)) %>% 
   mutate(cond = recode(cond,
                        RANDREG = "Novel",
                        TARGET = "Repeated")) %>% 
-  ggplot(aes(x = cond, y = idyom_cp_reaction_time)) + 
+  ggplot(aes(x = cond, y = model_reaction_time)) + 
   geom_violin(bw = 0.03, fill = "black") + 
   theme(aspect.ratio = 1) + 
   coord_flip() + 

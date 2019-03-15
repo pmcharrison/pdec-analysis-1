@@ -19,7 +19,7 @@ par <- list(
     upper = c(10, 0.45),
     control = list(
       maxeval = 50,
-      ftol_abs = 0.01
+      ftol_abs = 0.05
     ),
     na_penalty = 1
   ),
@@ -31,7 +31,8 @@ par <- list(
   alphabet = readRDS(file = "output/alphabet.rds")
 )
 
-dat <- readRDS(file = "output/data-00-participants.rds")
+dat <- readRDS(file = "output/data-00-participants.rds") %>% 
+  filter(subj < 23)
 
 optimised_par <- conduct_optimisations(dat, par)
 optimised_analyses <- get_optimised_analyses(dat, par, optimised_par)

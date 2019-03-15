@@ -20,14 +20,31 @@ ppm_dataset <- function(dat, coef, par) {
     mutate(model_reaction_time = mod_lag_tones * par$tone_length)
 }
 
+# ppm_cost <- function(coef, dat, par) {
+#   dat %>% 
+#     ppm_dataset(coef, par) %>% 
+#     filter(condition %in% 1:2) %>% 
+#     filter(correct) %>% 
+#     summarise(cost = mean(abs(model_reaction_time - RTadj), na.rm = TRUE) + 
+#                 par$optim$na_penalty * mean(is.na(model_reaction_time))) %>% 
+#     as.numeric() %>% 
+#     print()
+# }
+
 ppm_cost <- function(coef, dat, par) {
   dat %>% 
     ppm_dataset(coef, par) %>% 
-    filter(condition %in% 1:2) %>% 
-    filter(correct) %>% 
-    summarise(cost = mean(abs(model_reaction_time - RTadj), na.rm = TRUE) + 
-                par$optim$na_penalty * mean(is.na(model_reaction_time))) %>% 
-    as.numeric() %>% 
+    select(subj, cond, block, RTadj, model_reaction_time) %>% 
+    filter(!is.na(cond)) %>% 
+    group_by(subj, cond, block) %>% 
+    summarise_all(funs(mean), na.rm = TRUE) %>% 
+    ungroup() %>% 
+    select(-subj) %>%
+    group_by(cond, block) %>% 
+    summarise_all(funs(mean)) %>% 
+    mutate(err = (model_reaction_time - RTadj) ^ 2) %>% 
+    pull(err) %>% 
+    mean() %>% 
     print()
 }
 
