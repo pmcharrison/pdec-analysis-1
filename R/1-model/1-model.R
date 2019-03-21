@@ -6,8 +6,8 @@ par <- list(
   ppm = c(
     buffer_length_time = 2,
     buffer_length_items = 15,
-    buffer_weight = 1.6,
-    stm_half_life = 0.8,
+    buffer_weight = 2.5,
+    stm_half_life = 1.75,
     stm_weight = 0.45,
     ltm_weight = 0.005,
     noise = 0.5,
@@ -32,7 +32,6 @@ par <- list(
 )
 
 dat <- readRDS(file = "output/data-00-participants.rds") %>% 
-  filter(subj < 23)
 
 optimised_par <- conduct_optimisations(dat, par)
 optimised_analyses <- get_optimised_analyses(dat, par, optimised_par)
