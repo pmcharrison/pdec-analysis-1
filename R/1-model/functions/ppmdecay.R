@@ -58,7 +58,7 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   pb <- utils::txtProgressBar(max = N, style = 3)
   res <- vector(mode = "list", length = N)
   for (i in seq_len(N)) {
-    seq <- as.integer(factor(seqs[[i]], levels = alphabet)) - 1L
+    seq <- factor(seqs[[i]], levels = alphabet)
     res[[i]] <- ppm::model_seq(
       model = mod, 
       seq = seq,
