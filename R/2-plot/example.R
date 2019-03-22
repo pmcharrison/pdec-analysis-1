@@ -8,7 +8,7 @@ theme_set(theme_classic() + theme(
 panel <- function(prefix, familiarity, detect, label_x = TRUE, legend = FALSE,
                   label_facets = FALSE) {
   p <- tibble(
-    one_gram = c(prefix, rep(LETTERS[1:3], times = 4)),
+    one_gram = c(prefix, rep(LETTERS[1:3], times = 3)),
     two_gram = c(NA, map2_chr(one_gram[- length(one_gram)], one_gram[2:length(one_gram)], paste0)),
     three_gram = c(NA, NA, map2_chr(one_gram[seq_len(length(one_gram) - 2L)], two_gram[-c(1:2)], paste0)),
     pos = seq_along(one_gram),
@@ -75,7 +75,7 @@ p1 <- panel(c("C", "C", "B", "A"),
                                               2 * pmax(0, pos - 9)))
               )
             },
-            detect = 13.5,
+            detect = 11.5,
             label_x = FALSE,
             legend = FALSE)
 
@@ -121,4 +121,4 @@ cowplot::plot_grid(
   rel_widths = c(5, 1)
 )
 
-ggsave("output/schematic-figure.pdf", width = 10, height = 4)
+ggsave("output/schematic-figure.pdf", width = 9, height = 4)
