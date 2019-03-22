@@ -20,7 +20,7 @@ par <- list(
     lower = c(0, 0),
     upper = c(10, 0.45),
     control = list(
-      maxeval = 50,
+      maxeval = 100,
       ftol_abs = 0.05
     ),
     na_penalty = 1
