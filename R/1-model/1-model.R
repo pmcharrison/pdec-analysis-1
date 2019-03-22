@@ -22,7 +22,7 @@ par <- list(
     upper = c(10, 0.45),
     control = list(
       maxeval = 100,
-      ftol_abs = 0.05
+      ftol_abs = 0.001
     ),
     na_penalty = 1
   ),
