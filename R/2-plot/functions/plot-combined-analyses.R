@@ -3,6 +3,9 @@ plot_combined_analyses <- function(optimised_analyses) {
     filter(correct) %>% 
     select(subj, cond, block, RTadj, model_reaction_time) %>% 
     filter(!is.na(cond)) %>% 
+    mutate(model_reaction_time = if_else(model_reaction_time < 0,
+                                         as.numeric(NA),
+                                         model_reaction_time)) %>% 
     group_by(subj, cond, block) %>% 
     summarise_all(funs(mean), na.rm = TRUE) %>% 
     group_by(cond, block) %>%

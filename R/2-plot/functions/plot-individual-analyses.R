@@ -1,7 +1,10 @@
 plot_individual_analyses <- function(optimised_analyses) {
   optimised_analyses$individual %>%
     filter(correct) %>% 
-    select(subj, cond, block, RTadj, model_reaction_time) %>% 
+    select(subj, cond, block, RTadj, model_reaction_time) %>%
+    mutate(model_reaction_time = if_else(model_reaction_time < 0,
+                                         as.numeric(NA),
+                                         model_reaction_time)) %>% 
     filter(!is.na(cond) & !is.na(model_reaction_time)) %>% 
     gather(data_source, reaction_time, RTadj, model_reaction_time) %>% 
     group_by(subj, cond, block, data_source) %>%
