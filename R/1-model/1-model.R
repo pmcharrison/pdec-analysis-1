@@ -5,6 +5,7 @@ par <- list(
   analyse_combined = TRUE,
   seq_length = 20L, # number of tones
   tone_length = 0.05, # seconds
+  blocks = 1:5,
   ppm = c(
     buffer_length_time = 2,
     buffer_length_items = 15,
@@ -33,7 +34,8 @@ par <- list(
   alphabet = readRDS(file = "output/alphabet.rds")
 )
 
-dat <- readRDS(file = "output/data-00-participants.rds")
+dat <- readRDS(file = "output/data-00-participants.rds") %>% 
+  filter(block %in% par$blocks)
 
 optimised_par <- conduct_optimisations(dat, par)
 optimised_analyses <- get_optimised_analyses(dat, par, optimised_par)
