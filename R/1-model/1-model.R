@@ -1,6 +1,8 @@
 source("R/1-model/1-setup.R")
 
 par <- list(
+  analyse_individuals = TRUE,
+  analyse_combined = TRUE,
   seq_length = 20L, # number of tones
   tone_length = 0.05, # seconds
   ppm = c(
@@ -31,7 +33,7 @@ par <- list(
   alphabet = readRDS(file = "output/alphabet.rds")
 )
 
-dat <- readRDS(file = "output/data-00-participants.rds") %>% 
+dat <- readRDS(file = "output/data-00-participants.rds")
 
 optimised_par <- conduct_optimisations(dat, par)
 optimised_analyses <- get_optimised_analyses(dat, par, optimised_par)

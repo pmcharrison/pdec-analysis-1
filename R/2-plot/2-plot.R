@@ -4,10 +4,25 @@ par <- readRDS("output/data-01-all-par.rds")
 optimised_par <- readRDS("output/data-01-optimised-par.rds")
 optimised_analyses <- readRDS("output/data-01-optimised-analyses.rds")
 
+warning("Rule for filtering out negative model reaction times")
 
-optimised_analyses
+optimised_par$combined
 
-plot_individual_par(optimised_par)
+plot_individual_par(optimised_par) %>% 
+  ggsave(plot = ., 
+         filename = "output/individual-par.pdf",
+         width = 4.5, 
+         height = 4.5)
+plot_individual_analyses(optimised_analyses) %>% 
+  ggsave(plot = ., 
+         filename = "output/individual-analyses.pdf",
+         width = 16, 
+         height = 3.5)
+plot_combined_analyses(optimised_analyses) %>% 
+  ggsave(plot = ., 
+         filename = "output/overall-analyses.pdf",
+         width = 7, 
+         height = 3.75)
 
 get_cost <- function(dat) {
   dat %>% 
@@ -23,62 +38,10 @@ get_cost <- function(dat) {
     pull(err) %>% 
     mean()
 }
-  
-  
-    summarise_all(funs(mean, sd, n = length, se = sd / sqrt(n), 
-                       ymin = mean - se, ymax = mean + se))
-    
-      
-      
-    gather(data_source, reaction_time, RTadj, model_reaction_time) %>% 
-    select(- subj) %>%
-    # group_by(subj, cond, block, data_source) %>%
-    group_by(cond, block, data_source) %>%
-    summarise_all(funs(mean, sd, n = length, se = sd / sqrt(n), 
-                       ymin = mean - se, ymax = mean + se)) %>% 
-    ungroup() 
-    
-}
 
 
-# p1 <- 
-# optimised_analyses$combined %>% 
-  
-  
-y %>% 
-  filter(correct) %>% 
-  select(subj, cond, block, RTadj, model_reaction_time) %>% 
-  filter(!is.na(cond)) %>% 
-  group_by(subj, cond, block) %>% 
-  summarise_all(funs(mean), na.rm = TRUE) %>% 
-  group_by(cond, block) %>%
-  gather(data_source, reaction_time, RTadj, model_reaction_time) %>% 
-  select(- subj) %>%
-  # group_by(subj, cond, block, data_source) %>%
-  group_by(cond, block, data_source) %>%
-  summarise_all(funs(mean, sd, n = length, se = sd / sqrt(n), 
-                     ymin = mean - se, ymax = mean + se)) %>% 
-  ungroup() %>%
-  mutate(data_source = recode(data_source,
-                              model_reaction_time = "Simulated", 
-                              RTadj = "Observed"),
-         cond = recode(cond,
-                       RANDREG = "Novel",
-                       TARGET = "Repeated")) %>% 
-  ggplot(aes()) + 
-  geom_line(aes(x = block, y = mean, colour = cond, linetype = data_source)) +
-  geom_ribbon(aes(x = block, ymin = ymin, ymax = ymax, fill = cond, group = paste(cond, data_source)),
-              alpha = 0.3) + 
-  scale_x_continuous("Block") + 
-  scale_y_continuous("Reaction time (s)") +
-  scale_fill_manual("Condition", values = c("black", "blue")) + 
-  scale_color_manual("Condition", values = c("black", "blue")) + 
-  scale_linetype_discrete("Type")
-  # facet_wrap(~ subj) +
-  theme(aspect.ratio = 1)
-plot(p1)
-ggsave("fig-1--ideal-model--rt-by-block-and-cond.pdf", path = "output",
-       width = 4.5, height = 4)
+
+
 
 p2 <- dat %>% 
   select(block, cond, model_reaction_time) %>% 

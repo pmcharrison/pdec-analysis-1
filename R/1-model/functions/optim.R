@@ -50,21 +50,30 @@ ppm_cost <- function(coef, dat, par) {
 
 conduct_optimisations <- function(dat, par) {
   res <- list()
-  message("Analysing individuals...")
-  res$individual <- map(unique(dat$subj), function(s) c(
-    subj = s,
-    ppm_optim(dat %>% filter(subj == s), par)
-  ))
   
-  message("Analysing aggregated data...")
-  res$combined <- ppm_optim(dat, par)
+  res$individual <- if (par$analyse_individuals) {
+    message("Analysing individuals...")
+    map(unique(dat$subj), function(s) c(
+      subj = s,
+      ppm_optim(dat %>% filter(subj == s), par)
+    ))
+  }
+    
+  res$combined <- if (par$analyse_combined) {
+    message("Analysing aggregated data...")
+    ppm_optim(dat, par)
+  }
+
   res
 }
 
 get_optimised_analyses <- function(dat, par, optimised_par) {
   list(
-    individual = get_individual_optimised_analyses(dat, par, optimised_par),
-    combined = get_combined_optimised_analyses(dat, par, optimised_par)
+    individual = if (par$analyse_individuals)
+      get_individual_optimised_analyses(dat, par, optimised_par),
+    
+    combined = if (par$analyse_combined)
+      get_combined_optimised_analyses(dat, par, optimised_par)
   )
 }
 
