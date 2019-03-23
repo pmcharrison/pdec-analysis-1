@@ -24,5 +24,8 @@ plot_block_1_v_5(optimised_analyses) %>%
          filename = "output/block-1-v-5.pdf",
          width = 6, 
          height = 3.25)
-
-
+plot_ic_profile(optimised_analyses) %>% 
+  ggsave(plot = ., 
+         file = "output/ic-profile.pdf", 
+         width = 7, 
+         height = 6)
