@@ -15,11 +15,13 @@ plot_individual_par <- function(optimised_par) {
     theme(aspect.ratio = 1)
   
   p_individual_m1 <- cowplot::axis_canvas(p_individual_main, axis = "x", coord_flip = TRUE) +
-    geom_boxplot(data = df_individual, aes(x = 0, y = ltm_weight), fill = "#7aadff") + 
+    geom_boxplot(data = df_individual, aes(x = 0, y = ltm_weight), fill = "#7aadff",
+                 outlier.shape = NA) + 
     coord_flip()
   
   p_individual_m2 <- cowplot::axis_canvas(p_individual_main, axis = "y") +
-    geom_boxplot(data = df_individual, aes(0, y = noise), fill = "#7aadff")
+    geom_boxplot(data = df_individual, aes(0, y = noise), fill = "#7aadff",
+                 outlier.shape = NA)
   
   p <- suppressWarnings({
     p_individual_main %>% 
