@@ -29,3 +29,9 @@ plot_ic_profile(optimised_analyses) %>%
          file = "output/ic-profile.pdf", 
          width = 7, 
          height = 6)
+plot_ic_profile_2(optimised_analyses) %>% 
+  ggsave(plot = ., 
+         file = "output/ic-profile-2.pdf", 
+         width = 7, 
+         height = 6)
+

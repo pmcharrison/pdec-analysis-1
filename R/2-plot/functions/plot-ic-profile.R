@@ -35,3 +35,44 @@ plot_ic_profile <- function(optimised_analyses) {
     scale_y_continuous("Information content") +
     facet_wrap(~ block, ncol = 1)
 }
+
+plot_ic_profile_2 <- function(optimised_analyses) {
+  df1 <- optimised_analyses$combined %>% 
+    filter(!is.na(cond)) %>% 
+    filter(block == 5) %>% 
+    select(block, cond, transition, mod_pos_when_change_detected, mod) %>% 
+    mutate(cond = recode(cond, 
+                         RANDREG = "Novel",
+                         TARGET = "Repeated"))
+  
+  df2 <- df1 %>% 
+    select(- mod) %>% 
+    group_by(cond) %>% 
+    summarise_all(mean, na.rm = TRUE)
+  
+  df3 <- df1 %>% 
+    select(cond, mod) %>% 
+    pmap(function(cond, mod) {
+      tibble(
+        cond = cond,
+        pos = mod$pos - mod$pos[1] + 1L,
+        information_content = mod$information_content
+      )
+    }) %>% 
+    bind_rows() %>% 
+    group_by(cond, pos) %>% 
+    summarise(ic_mean = mean(information_content),
+              ic_sd = sd(information_content))
+  
+  ggplot(df3, aes(pos, ic_mean, ymin = ic_mean - ic_sd, ymax = ic_mean + ic_sd)) +
+    geom_line() + 
+    geom_ribbon(alpha = 0.2, fill = "blue") + 
+    geom_vline(aes(xintercept = transition), df2, linetype = "dashed") +
+    geom_vline(aes(xintercept = mod_pos_when_change_detected), df2, linetype = "dashed") +
+    scale_x_continuous("Tone number", 
+                       sec.axis = sec_axis(~ (. - 1) * par$tone_length,
+                                           name = "Time (s)")) +
+    scale_y_continuous("Information content") +
+    facet_wrap(~ cond, ncol = 1) + 
+    theme(strip.text.x = element_text(margin = margin(.1, 0, .1, 0, "cm")))
+}
