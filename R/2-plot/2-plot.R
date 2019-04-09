@@ -34,4 +34,6 @@ plot_ic_profile_2(optimised_analyses) %>%
          file = "output/ic-profile-2.pdf", 
          width = 7, 
          height = 6)
+get_ic_profile_data(optimized_analyses) %>% 
+  write_csv("output/ic-profiles.csv")
 

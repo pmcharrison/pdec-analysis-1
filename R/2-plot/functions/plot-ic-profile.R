@@ -1,3 +1,15 @@
+get_ic_profile_data <- function(optimized_analyses) {
+  optimised_analyses$combined %>% 
+    filter(!is.na(cond)) %>% 
+    select(subj, block, trialN, cond, transition, mod_pos_when_change_detected, mod) %>% 
+    pmap(function(subj, block, trialN, cond, transition, mod_pos_when_change_detected, mod) {
+      tibble(subj, block, trialN, cond, transition, mod_pos_when_change_detected,
+             pos = mod$pos - mod$pos[1] + 1L,
+             information_content = mod$information_content)
+    }) %>% 
+    bind_rows()
+}
+
 plot_ic_profile <- function(optimised_analyses) {
   df1 <- optimised_analyses$combined %>% 
     filter(!is.na(cond)) %>% 
