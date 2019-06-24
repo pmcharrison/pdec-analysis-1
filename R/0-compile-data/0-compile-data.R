@@ -1,3 +1,4 @@
+library(magrittr)
 source("R/0-compile-data/0-setup.R")
 
 par <- list(seq_len = 140L,
