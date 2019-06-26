@@ -11,40 +11,32 @@ get_ic_profile_data <- function(optimized_analyses) {
 }
 
 plot_ic_profile <- function(optimised_analyses) {
-  df1 <- optimised_analyses$combined %>% 
+  optimised_analyses$combined %>% 
     filter(!is.na(cond)) %>% 
     filter(cond == "TARGET" & block %in% c(1, 5)) %>% 
     select(block, transition, mod_pos_when_change_detected, mod) %>% 
-    mutate(block = paste("Block", block))
-  
-  df2 <- df1 %>% 
-    select(- mod) %>% 
-    group_by(block) %>% 
-    summarise_all(mean, na.rm = TRUE)
-  
-  df3 <- df1 %>% 
-    select(block, mod) %>% 
-    pmap(function(block, mod) {
+    mutate(block = paste("Block", block)) %>% 
+    select(block, transition, mod) %>% 
+    pmap(function(block, transition, mod) {
       tibble(
         block = block,
         pos = mod$pos - mod$pos[1] + 1L,
+        rel_pos = pos - transition,
         information_content = mod$information_content
       )
     }) %>% 
     bind_rows() %>% 
-    group_by(block, pos) %>% 
+    group_by(block, rel_pos) %>% 
     summarise(ic_mean = mean(information_content),
-              ic_sd = sd(information_content))
-  
-  df3 %>% 
-    filter(pos >= 50) %>% 
-    ggplot(aes(pos, ic_mean, ymin = ic_mean - ic_sd, ymax = ic_mean + ic_sd, 
+              ic_sd = sd(information_content)) %>% 
+    filter(rel_pos >= -10) %>% 
+    ggplot(aes(rel_pos, ic_mean, ymin = ic_mean - ic_sd, ymax = ic_mean + ic_sd, 
                colour = block, fill = block)) +
     geom_line() + 
-    geom_vline(aes(xintercept = transition), df2, linetype = "dashed") +
+    geom_vline(xintercept = 0, linetype = "dashed") +
     
     scale_x_continuous("Tone number", 
-                       sec.axis = sec_axis(~ (. - 1) * par$tone_length,
+                       sec.axis = sec_axis(~ (.) * par$tone_length,
                                            name = "Time (s)")) +
     scale_y_continuous("Information content") + 
     scale_colour_viridis_d(NULL) +
