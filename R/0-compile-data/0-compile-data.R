@@ -1,33 +1,46 @@
-library(magrittr)
-source("R/0-compile-data/0-setup.R")
+library(tidyverse)
 
-par <- list(seq_len = 140L,
-            max_block = 7L) # Filter out data for block > 7
+for (f in list.files("R/0-compile-data/functions/", full.names = TRUE, pattern = "\\.R$"))
+  source(f)
 
-# Assumptions:
-# - each row of df_resp is a unique combination of subj, block, and trialN
-# - trialN maps to rows of df_stimuli and df_trials
+data <- list()
 
-set_info("seq_len", par$seq_len, "Number of tones in each sequence")
+message("Compiling data for experiment 1...")
+data$exp_1 <- compile_data(
+  path_response = "input/exp1_retention/response/exp1_retention.txt",
+  path_stim = "input/exp1_retention/stimuli",
+  format_stim = "stimuli_subj_%i_exp1_retention.txt",
+  format_stim_desc = "stimDescription_subj_%i_exp1_retention.txt",
+  max_block = 5L
+)
+check_data_exp_1(data$exp_1$data)
 
-# Note: df_resp only contains correct trials
-df_resp <- get_df_resp()
+message("Compiling data for experiment 4a...")
+data$exp_4a <- compile_data(
+  path_response = "input/exp4a_interruption/response/exp4a_interruption.txt",
+  path_stim = "input/exp4a_interruption/stimuli",
+  format_stim = "stimuli_subj_%i_exp4a_interruption.txt",
+  format_stim_desc = "stimDescription_subj_%i_exp4a_interruption.txt",
+  max_block = 5L
+)
+check_data_exp_4a(data$exp_4a$data)
 
-subj <- df_resp$subj %>% unique
-set_info("subj", subj, "Unique subject IDs")
+message("Compiling data for experiment 7...")
+data$exp_7 <- compile_data(
+  path_response = "input/exp7_immediaterep/response/exp7_immediaterep.txt",
+  path_stim = "input/exp7_immediaterep/stimuli",
+  format_stim = "stimuli_subj_%i_exp7_immediaterep.txt",
+  format_stim_desc = "stimDescription_subj_%i_exp7_immediaterep.txt",
+  max_block = 5L,
+  subj_exclude = 20 
+)
+# Subject 20 is excluded because their data seems to have been corrupted,
+# with condition numbers not aligning properly with the main dataset.
+check_data_exp_7(data$exp_7$data)
 
-files <- get_files(subj)
-  
-df_trials <- get_df_trials(files = files, par = par)
-df_stimuli <- get_df_stimuli(files = files)
-df <- get_df(subj = subj,
-             df_trials = df_trials,
-             df_stimuli = df_stimuli,
-             df_resp = df_resp)
 
-check_df(df)
-alphabet <- get_alphabet(df)
-
-if (!dir.exists("output")) dir.create("output")
-saveRDS(df, "output/data-00-participants.rds")
-saveRDS(alphabet, "output/alphabet.rds")
+if (FALSE) {
+  if (!dir.exists("output")) dir.create("output")
+  saveRDS(df, "output/data-00-participants.rds")
+  saveRDS(alphabet, "output/alphabet.rds")
+}

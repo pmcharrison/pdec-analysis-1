@@ -1,13 +1,14 @@
-get_files <- function(subj) {
+get_files <- function(subj, 
+                      path_stim,
+                      format_stim,
+                      format_stim_desc) {
+  
   list(trials = tibble(subj = subj,
-                       name = sprintf("stimDescription_subj_%i_exp1_retention.txt",
-                                      subj),
-                       path = file.path("input/exp1_retention/stimuli/",
-                                        name)),
+                       name = sprintf(format_stim_desc, subj),
+                       path = file.path(path_stim, name)),
+       
        stimuli = tibble(subj = subj,
-                        name = sprintf("stimuli_subj_%i_exp1_retention.txt",
-                                       subj),
-                        path = file.path("input/exp1_retention/stimuli/",
-                                         name)))
+                        name = sprintf(format_stim, subj),
+                        path = file.path(path_stim, name)))
   
 }

@@ -1,9 +1,9 @@
-get_df <- function(subj, df_trials, df_stimuli, df_resp) {
+get_df <- function(subj, df_trials, df_stimuli, df_resp, max_block) {
   map_dfr(subj, function(s) {
     d_trials <- df_trials %>% filter(subj == s)
     d_stimuli <- df_stimuli %>% filter(subj == s) %>% slice(seq_len(nrow(d_trials)))
     d <- add_column(d_trials, seq = d_stimuli$seq) %>% 
-      filter(block <= par$max_block)
+      filter(block <= max_block)
     d
   }) %>% left_join(df_resp, by = c("subj", "block", "trialN")) %>% 
     mutate(correct = case_when(
