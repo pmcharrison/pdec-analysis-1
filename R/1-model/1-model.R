@@ -1,7 +1,7 @@
 source("R/1-model/1-setup.R")
 
 par <- list(
-  analyse_individuals = TRUE,
+  analyse_individuals = FALSE,
   analyse_combined = TRUE,
   seq_length = 20L, # number of tones
   tone_length = 0.05, # seconds

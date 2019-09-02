@@ -2,7 +2,7 @@ library(magrittr)
 source("R/0-compile-data/0-setup.R")
 
 par <- list(seq_len = 140L,
-            max_block = 7L) # Filter out data for max_block > 7
+            max_block = 7L) # Filter out data for block > 7
 
 # Assumptions:
 # - each row of df_resp is a unique combination of subj, block, and trialN
