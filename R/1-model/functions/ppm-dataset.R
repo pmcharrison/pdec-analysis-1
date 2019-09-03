@@ -1,32 +1,13 @@
-get_optimised_analyses <- function(optim_res, dat, opt) {
-  ppm_dataset(dat, coef = optim_res$par, opt)
-}
-
-ppm_optim <- function(dat, opt) {
-  nloptr::sbplx(
-    x0 = opt$ppm[opt$optim$which],
-    fn = ppm_cost,
-    lower = opt$optim$lower,
-    upper = opt$optim$upper,
-    nl.info = FALSE,
-    control = opt$optim$control,
-    dat, 
-    opt
-  )
-}
-
-ppm_dataset <- function(dat, coef, opt) {
-  ppm_par <- opt$ppm
-  ppm_par[opt$optim$which] <- coef
-  dat %>% 
-    add_ppm_ic(ppm_par, opt$alphabet, opt$tone_length) %>% 
-    add_change_points(opt$cp, opt$alphabet) %>% 
+ppm_dataset <- function(data, ppm_par, alphabet, opt) {
+  data %>% 
+    add_ppm_ic(ppm_par, alphabet, opt$tone_length) %>% 
+    add_change_points(opt$cp, alphabet) %>% 
     mutate(model_reaction_time = mod_lag_tones * opt$tone_length)
 }
 
-ppm_cost <- function(coef, dat, opt) {
-  dat %>% 
-    ppm_dataset(coef, opt) %>% 
+ppm_cost <- function(coef, data, alphabet, opt) {
+  data %>% 
+    ppm_dataset(coef, alphabet, opt) %>% 
     select(subj, cond, block, RTadj, model_reaction_time) %>% 
     filter(!is.na(cond)) %>% 
     mutate(model_reaction_time = if_else(model_reaction_time < 0,
@@ -44,10 +25,10 @@ ppm_cost <- function(coef, dat, opt) {
     print()
 }
 
-add_ppm_ic <- function(dat, ppm_par, alphabet, tone_length) {
-  stopifnot(order(dat$subj, dat$block, dat$trialN) == seq_len(nrow(dat)))
+add_ppm_ic <- function(data, ppm_par, alphabet, tone_length) {
+  stopifnot(order(data$subj, data$block, data$trialN) == seq_len(nrow(data)))
   
-  dat %>% 
+  data %>% 
     group_by(subj) %>% 
     mutate(
       time = estimate_trial_time(block, trialN),
@@ -72,14 +53,17 @@ estimate_block_time <- function(block) {
   # Blocks 1-5 are on day 1 
   # Block 6 is on day 2
   # Block 7 is on day 3
+  
+  stopifnot(all(block %in% 1:5))
+  
   recode(block,
          `1` = 8.1 * 60 * 0,
          `2` = 8.1 * 60 * 1,
          `3` = 8.1 * 60 * 2,
          `4` = 8.1 * 60 * 3,
-         `5` = 8.1 * 60 * 4,
-         `6` = 24 * 60 * 60,
-         `7` = 7 * 7 * 24 * 60 * 60)
+         `5` = 8.1 * 60 * 4)
+         # `6` = 24 * 60 * 60,
+         # `7` = 7 * 7 * 24 * 60 * 60)
 }
 
 ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
@@ -122,3 +106,51 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
 }
 
 ic_subj <- memoise::memoise(ic_subj, cache = memoise::cache_filesystem(path = "cache/ic_subj"))
+
+cp_trial <- function(row, cp_par, alphabet) {
+  x <- row$mod[[1]]$information_content
+  stopifnot(is.numeric(x))
+  
+  cp <- cpm::detectChangePoint(x, 
+                               cpmType = cp_par$method, 
+                               ARL0 = cp_par$t1_error_rate,
+                               startup = cp_par$startup)
+  cp_stat <- rep(as.numeric(NA), times = length(x))
+  cp_stat[seq_along(cp$Ds)] <- cp$Ds
+  cp_stat[seq_len(cp_par$startup - 1L)] <- as.numeric(NA)
+  res <- list(
+    statistic = cp_stat,
+    change_detected = cp$changeDetected,
+    pos_when_change_detected = if (cp$changeDetected) cp$detectionTime else as.integer(NA)
+  )
+  res$lag_tones <- res$pos_when_change_detected - (row$transition + length(alphabet))
+  res
+}
+
+
+add_change_points <- function(data, cp_par, alphabet) {
+  message("Computing change points...")
+  
+  N <- nrow(data)
+  
+  data$mod_change_detected <- rep(as.logical(NA), times = N)
+  data$mod_pos_when_change_detected <- rep(as.integer(NA), times = N)
+  data$mod_lag_tones <- rep(as.integer(NA), times = N)
+  
+  pb <- utils::txtProgressBar(max = N, style = 3)
+  
+  for (i in seq_len(N)) {
+    cp <- cp_trial(data[i, ], cp_par, alphabet)
+    data$mod[[i]]$cp_statistic <- cp$statistic
+    data$mod_change_detected[i] <- cp$change_detected
+    data$mod_pos_when_change_detected[i] <- cp$pos_when_change_detected
+    data$mod_lag_tones[i] <- cp$lag_tones
+    utils::setTxtProgressBar(pb, i)
+  }
+  close(pb)
+  
+  data
+}
+
+add_change_points <- memoise::memoise(add_change_points, 
+                                      cache = memoise::cache_filesystem("cache/add_change_points"))
