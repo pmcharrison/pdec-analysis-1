@@ -15,7 +15,6 @@ compile_data <- function(path_response,
   df_resp <- get_df_resp(path_response)
   
   subj <- df_resp$subj %>% unique() %>% setdiff(subj_exclude)
-  set_info("subj", subj, "Unique subject IDs")
   
   files <- get_files(subj,
                      path_stim,

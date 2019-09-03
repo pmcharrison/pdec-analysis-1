@@ -22,12 +22,6 @@ get_df_trials <- function(files) {
       if (length(num_seq_in_block) > 1)
         stop("different blocks contained different numbers of sequences")
       
-      if (is.null(get_info("num_seq_in_block"))) {
-        set_info("num_seq_in_block", num_seq_in_block, "Number of sequences in each block")
-      } else {
-        stopifnot(num_seq_in_block == get_info("num_seq_in_block"))
-      }
-      
       t$new_seq <- NULL
       
       # Check that we wouldn't lose any information by collapsing over toneNum

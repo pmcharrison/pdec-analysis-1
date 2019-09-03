@@ -38,9 +38,4 @@ data$exp_7 <- compile_data(
 # with condition numbers not aligning properly with the main dataset.
 check_data_exp_7(data$exp_7$data)
 
-
-if (FALSE) {
-  if (!dir.exists("output")) dir.create("output")
-  saveRDS(df, "output/data-00-participants.rds")
-  saveRDS(alphabet, "output/alphabet.rds")
-}
+saveRDS(data, "output/data-00-participants.rds")
