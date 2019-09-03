@@ -1,11 +1,8 @@
 source("R/1-model/1-setup.R")
 
-par <- list(
-  analyse_individuals = FALSE,
-  analyse_combined = TRUE,
+opt <- list(
   seq_length = 20L, # number of tones
-  tone_length = 0.05, # seconds
-  blocks = 1:5,
+  tone_length = 0.05,
   ppm = c(
     buffer_length_time = 2,
     buffer_length_items = 15,
@@ -34,12 +31,16 @@ par <- list(
   alphabet = readRDS(file = "output/alphabet.rds")
 )
 
-dat <- readRDS(file = "output/data-00-participants.rds") %>% 
-  filter(block %in% par$blocks)
 
-optimised_par <- conduct_optimisations(dat, par)
-optimised_analyses <- get_optimised_analyses(dat, par, optimised_par)
+model_dataset <- function(data, ppm_par, alphabet, opt) {
+  
+}
 
-saveRDS(optimised_par, "output/data-01-optimised-par.rds")
-saveRDS(par, "output/data-01-all-par.rds")
-saveRDS(optimised_analyses, "output/data-01-optimised-analyses.rds")
+dat <- readRDS(file = "output/data-00-participants.rds")
+
+optim_res <- ppm_optim(dat, opt)
+optim_analyses <- get_optimised_analyses(optim_res, dat, opt)
+
+# saveRDS(optimised_par, "output/data-01-optimised-par.rds")
+# saveRDS(par, "output/data-01-all-par.rds")
+# saveRDS(optimised_analyses, "output/data-01-optimised-analyses.rds")
