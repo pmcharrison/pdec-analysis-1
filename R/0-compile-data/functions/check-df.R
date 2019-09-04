@@ -31,7 +31,7 @@ check_data_exp_1 <- function(df) {
 
 # Check the output of experiment 4a compilation
 check_data_exp_4a <- function(df) {
-  df %>% filter(subj == 20) %>% select(condition, cond) %>% table
+  df %>% select(condition, cond) %>% table
   
   browser()
   
