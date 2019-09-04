@@ -6,19 +6,19 @@ theme_set(theme_bw())
 opt <- list(
   seq_length = 20L, # number of tones
   tone_length = 0.05,
-  # optim = list(
-  #   which = c("noise", "ltm_weight"),
-  #   lower = c(0, 0),
-  #   upper = c(10, 0.45),
-  #   control = list(
-  #     maxeval = 100,
-  #     ftol_abs = 0.001
-  #   ),
-  #   na_penalty = 1
-  # ),
   cp = list(
     method = "Mann-Whitney",
     t1_error_rate = 10000,
+    startup = 20 
+  )
+)
+
+opt_7 <- list(
+  seq_length = 20L, # number of tones
+  tone_length = 0.05,
+  cp = list(
+    method = "Mann-Whitney",
+    t1_error_rate = 370,
     startup = 20 
   )
 )
@@ -52,7 +52,7 @@ ppm_pars <- list(
 
 dat <- readRDS(file = "output/data-00-participants.rds")
 
-x <- ppm_dataset(
+x1 <- ppm_dataset(
   data = dat$exp_1$data %>% filter(subj == 1),
   alphabet = dat$exp_1$alphabet,
   ppm_par = ppm_pars$orig,
@@ -60,34 +60,144 @@ x <- ppm_dataset(
 )
 
 set.seed(1)
-y <- ppm_dataset(
+x2 <- ppm_dataset(
   data = dat$exp_1$data, # %>% filter(subj %in% 1:5),
   alphabet = dat$exp_1$alphabet,
   ppm_par = ppm_pars$stm_ltm_decay,
   opt = opt
 )
-plot_blocks(y)
+plot_blocks(x2)
 
-z <- ppm_dataset(
+set.seed(1)
+y2 <- ppm_dataset(
   data = dat$exp_4a$data %>% filter(subj %in% 1:5),
   alphabet = dat$exp_4a$alphabet,
   ppm_par = ppm_pars$stm_ltm_decay,
   opt = opt
 )
-plot_blocks(z)
+plot_blocks(y2)
 
-z %>% filter(cond %in% c("RANDREG", "TARGET")) %>% # &
-               # !is.na(model_reaction_time)) %>%
-  group_by(block, cond) %>% 
-  summarise(human_rt = mean(RTadj, na.rm = TRUE)) %>% 
-  ggplot(aes(x = block, y = human_rt, colour = cond)) + 
-  geom_point()
+set.seed(1)
+z1 <- ppm_dataset(
+  data = dat$exp_7$data, # %>% filter(subj %in% 1:5),
+  alphabet = dat$exp_7$alphabet,
+  ppm_par = ppm_pars$orig,
+  opt = opt
+)
+
+set.seed(1)
+z2 <- ppm_dataset(
+  data = dat$exp_7$data %>% filter(subj %in% 1:5),
+  alphabet = dat$exp_7$alphabet,
+  ppm_par = ppm_pars$stm_ltm_decay,
+  opt = opt
+)
+# plot_blocks(z2, cond_list = c(
+#   "#1471B9" = "RANREG",
+#   "#EEC00D" = "RANREGr",
+#   "REPinRAN",
+#   "REPinRANr"
+# ))
+
+x2 %>%
+  mutate(condition = recode(condition, 
+                            `1` = 'TARGET',
+                            `2` = 'RANDREG',
+                            `3` = "RAND",
+                            `4` = 'STEP',
+                            `5` = 'CONT')) %>% 
+  group_by(condition) %>%
+  summarise(model_hit_rate = mean(!is.na(model_reaction_time)),
+            human_hit_rate = mean(!is.na(correct) & correct),
+            n = n())
+
+# This is about right, except the baselining is off
+z2 %>% 
+  mutate(condition = recode(condition, 
+                            `1` = 'RREGr',
+                            `2` = 'RREG',
+                            `3` = 'RAND',
+                            `4` = 'STEP',
+                            `5` = 'CONT', 
+                            `6` = 'REPinRANr', 
+                            `7` ='REPinRAN')) %>% 
+  filter(block %in% 1:4 & 
+           condition %in% c('RREG', 'RREGr', 'REPinRAN', 'REPinRANr')) %>% 
+  group_by(block, condition) %>% 
+  summarise(model_hit_rate = mean(!is.na(model_reaction_time)),
+            human_hit_rate = mean(!is.na(correct) & correct),
+            human_rt = mean(RTadj, na.rm = TRUE),
+            rt_mean = na.omit(model_reaction_time) %>% mean(),
+            rt_n = na.omit(model_reaction_time) %>% length(),
+            rt_sd = na.omit(model_reaction_time) %>% sd(),
+            rt_se = rt_sd / sqrt(rt_n),
+            rt_95_lower = rt_mean - 1.96 * rt_se,
+            rt_95_upper = rt_mean + 1.96 * rt_se) %>% {print(.); .} %>% 
+  ggplot(aes(block, rt_mean, colour = condition)) + 
+  geom_line()
+
+
+z1 %>% 
+# dat$exp_7$data %>% 
+  mutate(condition = recode(condition, 
+                            `1` = 'RREGr',
+                            `2` = 'RREG',
+                            `3` = 'RAND',
+                            `4` = 'STEP',
+                            `5` = 'CONT', 
+                            `6` = 'REPinRANr', 
+                            `7` ='REPinRAN')) %>% 
+  filter(block == 5) %>% 
+  pull(condition) %>% table
+  
+  filter(condition == "REPinRANr" & block == 5) %>% 
+  slice(4) %>% pull(mod) %>% `[[`(1) %>% select(pos, information_content) %>% mutate(pos = pos - min(pos)) %>% plot
+  
+  
+  
+  filter(block == 5) %>% 
+  filter(condition %in% c("RREGr", "RREG", "REPinRANr")) %>% 
+  group_by(condition) %>% 
+  summarise(model_hit_rate = mean(!is.na(model_reaction_time)),
+            human_hit_rate = mean(!is.na(correct) & correct),
+            human_rt = mean(RTadj, na.rm = TRUE),
+            rt_mean = na.omit(model_reaction_time) %>% mean(),
+            rt_n = na.omit(model_reaction_time) %>% length(),
+            rt_sd = na.omit(model_reaction_time) %>% sd(),
+            rt_se = rt_sd / sqrt(rt_n),
+            rt_95_lower = rt_mean - 1.96 * rt_se,
+            rt_95_upper = rt_mean + 1.96 * rt_se) %>% {print(.); .} %>%
+  # summarise(human_rt = mean(RTadj, na.rm = TRUE)) %>% 
+  ggplot(aes(x = condition, y = rt_mean, 
+             ymin = rt_95_lower,
+             ymax = rt_95_upper,
+             fill = condition)) + 
+  geom_bar(stat = "identity") +
+  geom_errorbar(width = 0.2)
+
+# z1 %>% 
+#   filter()
+# 
+# 
+#   table()
+#   cond %>% table
+
+
+# z %>% filter(cond %in% c("RANDREG", "TARGET")) %>% # &
+#                # !is.na(model_reaction_time)) %>%
+#   group_by(block, cond) %>% 
+#   summarise(human_rt = mean(RTadj, na.rm = TRUE)) %>% 
+#   ggplot(aes(x = block, y = human_rt, colour = cond)) + 
+#   geom_point()
   
 
-plot_blocks <- function(x, colours = c("#1471B9", "#EEC00D")) {
+plot_blocks <- function(x, 
+                        cond_list = c("#1471B9" = "RANDREG",
+                                      "#EEC00D" = "TARGET")) {
   x %>% 
-    filter(cond %in% c("RANDREG", "TARGET") &
+    filter(cond %in% cond_list &
              !is.na(model_reaction_time)) %>%
+    mutate(cond = factor(cond, levels = cond_list)) %>% 
     group_by(block, cond) %>% 
     summarise(human_rt = mean(RTadj),
               rt_mean = mean(model_reaction_time),
@@ -105,8 +215,8 @@ plot_blocks <- function(x, colours = c("#1471B9", "#EEC00D")) {
     geom_line() + 
     geom_point() +
     # geom_errorbar(width = 0.1) +
-    scale_color_manual(values = colours) +
-    scale_fill_manual(values = colours) +
+    scale_color_manual(values = names(cond_list)) +
+    scale_fill_manual(values = names(cond_list)) +
     geom_ribbon(alpha = 0.1, colour = "white")
     # scale_color_viridis_d() +
     # scale_fill_viridis_d()

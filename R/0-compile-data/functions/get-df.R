@@ -1,4 +1,5 @@
 get_df <- function(subj, df_trials, df_stimuli, df_resp, max_block) {
+  browser()
   map_dfr(subj, function(s) {
     d_trials <- df_trials %>% filter(subj == s)
     d_stimuli <- df_stimuli %>% filter(subj == s) %>% slice(seq_len(nrow(d_trials)))
