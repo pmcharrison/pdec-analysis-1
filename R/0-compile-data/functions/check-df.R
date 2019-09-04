@@ -1,18 +1,19 @@
 # Check the output of the first experiment compilation
 check_data_exp_1 <- function(df) {
-  
+  df %>% select(condition, cond) %>% table
+
   # Check that condition == 1 corresponds to cond == TARGET or NA
   df %>% filter(condition == 1 & !is.na(cond)) %>% 
     transmute(test = cond == "TARGET") %>% 
     pull(test) %>% 
-    any %>% 
+    all %>% 
     stopifnot()
   
   # Check that condition == 2 corresponds to cond == RANDREG or NA
   df %>% filter(condition == 2 & !is.na(cond)) %>% 
     transmute(test = cond == "RANDREG") %>% 
     pull(test) %>% 
-    any %>% 
+    all %>% 
     stopifnot()
   
   # All participants took 420 stimuli
@@ -30,6 +31,9 @@ check_data_exp_1 <- function(df) {
 
 # Check the output of experiment 4a compilation
 check_data_exp_4a <- function(df) {
+  df %>% filter(subj == 20) %>% select(condition, cond) %>% table
+  
+  browser()
   
   # Check that condition == 1 corresponds to cond == TARGET or NA
   df %>% filter(condition == 1 & !is.na(cond)) %>% 

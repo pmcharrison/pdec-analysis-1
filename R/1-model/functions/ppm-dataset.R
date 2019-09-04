@@ -1,28 +1,8 @@
-ppm_dataset <- function(data, ppm_par, alphabet, opt) {
+ppm_dataset <- function(data, alphabet, ppm_par, opt) {
   data %>% 
     add_ppm_ic(ppm_par, alphabet, opt$tone_length) %>% 
     add_change_points(opt$cp, alphabet) %>% 
     mutate(model_reaction_time = mod_lag_tones * opt$tone_length)
-}
-
-ppm_cost <- function(coef, data, alphabet, opt) {
-  data %>% 
-    ppm_dataset(coef, alphabet, opt) %>% 
-    select(subj, cond, block, RTadj, model_reaction_time) %>% 
-    filter(!is.na(cond)) %>% 
-    mutate(model_reaction_time = if_else(model_reaction_time < 0,
-                                         as.numeric(NA),
-                                         model_reaction_time)) %>% 
-    group_by(subj, cond, block) %>% 
-    summarise_all(funs(mean), na.rm = TRUE) %>% 
-    ungroup() %>% 
-    select(-subj) %>%
-    group_by(cond, block) %>% 
-    summarise_all(funs(mean)) %>% 
-    mutate(err = (model_reaction_time - RTadj) ^ 2) %>% 
-    pull(err) %>% 
-    mean() %>% 
-    print()
 }
 
 add_ppm_ic <- function(data, ppm_par, alphabet, tone_length) {
@@ -73,14 +53,12 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   print(ppm_par)
   
   mod <- ppm::new_ppm_decay(alphabet_size = length(alphabet),
-                            order_bound = ppm_par[["order_bound"]],
-                            buffer_length_time = ppm_par[["buffer_length_time"]],
-                            buffer_length_items = ppm_par[["buffer_length_items"]],
-                            buffer_weight = ppm_par[["buffer_weight"]],
-                            stm_half_life = ppm_par[["stm_half_life"]],
-                            stm_weight = ppm_par[["stm_weight"]],
                             ltm_weight = ppm_par[["ltm_weight"]],
-                            noise = ppm_par[["noise"]])
+                            ltm_half_life = ppm_par[["ltm_half_life"]],
+                            noise = ppm_par[["noise"]],
+                            stm_weight = ppm_par[["stm_weight"]],
+                            stm_duration = ppm_par[["stm_duration"]],
+                            order_bound = ppm_par[["order_bound"]])
   
   message("Performing information_theoretic analyses on subject ", subj, "...")
   
@@ -105,6 +83,7 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   res
 }
 
+R.utils::mkdirs("cache/ic_subj")
 ic_subj <- memoise::memoise(ic_subj, cache = memoise::cache_filesystem(path = "cache/ic_subj"))
 
 cp_trial <- function(row, cp_par, alphabet) {
@@ -152,5 +131,6 @@ add_change_points <- function(data, cp_par, alphabet) {
   data
 }
 
+R.utils::mkdirs("cache/add_change_points")
 add_change_points <- memoise::memoise(add_change_points, 
                                       cache = memoise::cache_filesystem("cache/add_change_points"))
