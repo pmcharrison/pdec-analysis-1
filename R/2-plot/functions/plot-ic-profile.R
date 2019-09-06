@@ -1,5 +1,5 @@
-get_ic_profile_data <- function(optimized_analyses) {
-  optimised_analyses$combined %>% 
+get_ic_profile_data <- function(x) {
+  x %>% 
     filter(!is.na(cond)) %>% 
     select(subj, block, trialN, cond, transition, mod_pos_when_change_detected, mod) %>% 
     pmap(function(subj, block, trialN, cond, transition, mod_pos_when_change_detected, mod) {
@@ -10,8 +10,8 @@ get_ic_profile_data <- function(optimized_analyses) {
     bind_rows()
 }
 
-plot_ic_profile <- function(optimised_analyses) {
-  optimised_analyses$combined %>% 
+plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1) {
+  x %>% 
     filter(!is.na(cond)) %>% 
     filter(cond == "TARGET" & block %in% c(1, 5)) %>% 
     select(block, transition, mod_pos_when_change_detected, mod) %>% 
@@ -32,22 +32,25 @@ plot_ic_profile <- function(optimised_analyses) {
     filter(rel_pos >= -10) %>% 
     ggplot(aes(rel_pos, ic_mean, ymin = ic_mean - ic_sd, ymax = ic_mean + ic_sd, 
                colour = block, fill = block)) +
-    geom_line() + 
+    {if (loess) 
+      geom_smooth(span = span, method = "loess", se = FALSE) else
+      geom_line()} +
     geom_vline(xintercept = 0, linetype = "dashed") +
     
     scale_x_continuous("Tone number", 
-                       sec.axis = sec_axis(~ (.) * par$tone_length,
+                       sec.axis = sec_axis(~ (.) * opt$tone_length,
                                            name = "Time (s)")) +
     scale_y_continuous("Information content") + 
     scale_colour_viridis_d(NULL) +
+    scale_fill_viridis_d(NULL) +
     theme(aspect.ratio = 1)
   # geom_ribbon(alpha = 0.2, colour = "black") + 
   # geom_vline(aes(xintercept = mod_pos_when_change_detected), df2, linetype = "dashed") +
   # facet_wrap(~ block, ncol = 1)
 }
 
-plot_ic_profile_2 <- function(optimised_analyses) {
-  df1 <- optimised_analyses$combined %>% 
+plot_ic_profile_2 <- function(x, opt) {
+  df1 <- x %>% 
     filter(!is.na(cond)) %>% 
     filter(block == 5) %>% 
     select(block, cond, transition, mod_pos_when_change_detected, mod) %>% 
@@ -81,7 +84,7 @@ plot_ic_profile_2 <- function(optimised_analyses) {
     geom_vline(aes(xintercept = transition), df2, linetype = "dashed") +
     geom_vline(aes(xintercept = mod_pos_when_change_detected), df2, linetype = "dashed") +
     scale_x_continuous("Tone number", 
-                       sec.axis = sec_axis(~ (. - 1) * par$tone_length,
+                       sec.axis = sec_axis(~ (. - 1) * opt$tone_length,
                                            name = "Time (s)")) +
     scale_y_continuous("Information content") +
     facet_wrap(~ cond, ncol = 1) + 

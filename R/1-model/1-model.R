@@ -51,9 +51,11 @@ ppm_pars <- list(
 )
 
 dat <- readRDS(file = "output/data-00-participants.rds")
+source("R/2-plot/functions/plot-ic-profile.R")
 
+set.seed(1)
 x1 <- ppm_dataset(
-  data = dat$exp_1$data %>% filter(subj == 1),
+  data = dat$exp_1$data,
   alphabet = dat$exp_1$alphabet,
   ppm_par = ppm_pars$orig,
   opt = opt
@@ -66,6 +68,8 @@ x2 <- ppm_dataset(
   ppm_par = ppm_pars$stm_ltm_decay,
   opt = opt
 )
+plot_ic_profile(x2, opt)
+plot_ic_profile_2(x2, opt)
 plot_blocks(x2)
 
 set.seed(1)
