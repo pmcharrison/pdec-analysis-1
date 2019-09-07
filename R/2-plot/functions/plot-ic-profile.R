@@ -10,7 +10,7 @@ get_ic_profile_data <- function(x) {
     bind_rows()
 }
 
-plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1) {
+plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA)) {
   x %>% 
     filter(!is.na(cond)) %>% 
     filter(cond == "TARGET" & block %in% c(1, 5)) %>% 
@@ -39,7 +39,8 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1) {
     
     scale_x_continuous("Tone number", 
                        sec.axis = sec_axis(~ (.) * opt$tone_length,
-                                           name = "Time (s)")) +
+                                           name = "Time (s)"),
+                       limits = xlim) +
     scale_y_continuous("Information content") + 
     scale_colour_viridis_d(NULL) +
     scale_fill_viridis_d(NULL) +

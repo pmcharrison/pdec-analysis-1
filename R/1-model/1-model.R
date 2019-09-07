@@ -68,18 +68,37 @@ x2 <- ppm_dataset(
   ppm_par = ppm_pars$stm_ltm_decay,
   opt = opt
 )
-plot_ic_profile(x2, opt)
+plot_ic_profile(x2 %>% filter(subj == 1), opt, span = 0.25, xlim = c(NA, 50))
 plot_ic_profile_2(x2, opt)
 plot_blocks(x2)
 
 set.seed(1)
-y2 <- ppm_dataset(
+y1 <- ppm_dataset(
   data = dat$exp_4a$data %>% filter(subj %in% 1:5),
   alphabet = dat$exp_4a$alphabet,
-  ppm_par = ppm_pars$stm_ltm_decay,
+  ppm_par = ppm_pars$orig,
   opt = opt
 )
-plot_blocks(y2)
+plot_blocks(y1, error_bar = FALSE, line = FALSE, ribbon = FALSE)
+
+set.seed(1)
+y2 <- ppm_dataset(
+  data = dat$exp_4a$data, # %>% filter(subj %in% 1:5),
+  alphabet = dat$exp_4a$alphabet,
+  ppm_par = c(
+    stm_weight = 1,
+    stm_duration = 5,
+    ltm_weight = 0.01,
+    ltm_half_life = 1000,
+    noise = 0.45,
+    order_bound = 10
+  ),
+  opt = opt
+)
+  
+y2 %>% 
+  filter(model_reaction_time > 0) %>% 
+  plot_blocks(error_bar = TRUE, line = FALSE, ribbon = FALSE)
 
 set.seed(1)
 z1 <- ppm_dataset(
@@ -116,6 +135,8 @@ x2 %>%
             n = n())
 
 # This is about right, except the baselining is off
+# Note: behavioural RTs in Exp 7 are benchmarked to the effective 
+# transition, not the transition
 z2 %>% 
   mutate(condition = recode(condition, 
                             `1` = 'RREGr',
@@ -197,8 +218,13 @@ z1 %>%
 
 plot_blocks <- function(x, 
                         cond_list = c("#1471B9" = "RANDREG",
-                                      "#EEC00D" = "TARGET")) {
-  x %>% 
+                                      "#EEC00D" = "TARGET"),
+                        hline_1 = NULL,
+                        hline_2 = NULL,
+                        error_bar = FALSE,
+                        ribbon = TRUE,
+                        line = TRUE) {
+  p <- x %>% 
     filter(cond %in% cond_list &
              !is.na(model_reaction_time)) %>%
     mutate(cond = factor(cond, levels = cond_list)) %>% 
@@ -214,16 +240,21 @@ plot_blocks <- function(x,
                ymin = rt_95_lower, ymax = rt_95_upper,
                colour = cond,
                fill = cond)) +
-    geom_hline(yintercept = 1.45, linetype = "dotted") +
-    geom_hline(yintercept = 1.75, linetype = "dotted") +
-    geom_line() + 
-    geom_point() +
-    # geom_errorbar(width = 0.1) +
     scale_color_manual(values = names(cond_list)) +
-    scale_fill_manual(values = names(cond_list)) +
-    geom_ribbon(alpha = 0.1, colour = "white")
-    # scale_color_viridis_d() +
-    # scale_fill_viridis_d()
+    scale_fill_manual(values = names(cond_list)) + 
+    geom_point()
+  
+  if (!is.null(hline_1)) 
+    p <- p + geom_hline(yintercept = hline_1, linetype = "dotted")
+  
+  if (!is.null(hline_2)) 
+    p <- p + geom_hline(yintercept = hline_2, linetype = "dotted")
+  
+  if (line) p <- p + geom_line()
+  if (error_bar) p <- p + geom_errorbar(width = 0.1)
+  if (ribbon) p <- p + geom_ribbon(alpha = 0.1, colour = "white")
+  
+  p
 }
 
 plot_blocks(x)

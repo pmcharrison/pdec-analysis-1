@@ -42,8 +42,8 @@ estimate_block_time <- function(block) {
          `3` = 8.1 * 60 * 2,
          `4` = 8.1 * 60 * 3,
          `5` = 8.1 * 60 * 4)
-         # `6` = 24 * 60 * 60,
-         # `7` = 7 * 7 * 24 * 60 * 60)
+  # `6` = 24 * 60 * 60,
+  # `7` = 7 * 7 * 24 * 60 * 60)
 }
 
 ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
@@ -83,8 +83,9 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   res
 }
 
-R.utils::mkdirs("cache/ic_subj")
-ic_subj <- memoise::memoise(ic_subj, cache = memoise::cache_filesystem(path = "cache/ic_subj"))
+R.utils::mkdirs("/Downloads/peter/cache/ic_subj")
+ic_subj <- memoise::memoise(ic_subj, 
+                            cache = memoise::cache_filesystem(path = "/Downloads/peter/cache/ic_subj"))
 
 cp_trial <- function(row, cp_par, alphabet) {
   x <- row$mod[[1]]$information_content
@@ -102,7 +103,8 @@ cp_trial <- function(row, cp_par, alphabet) {
     change_detected = cp$changeDetected,
     pos_when_change_detected = if (cp$changeDetected) cp$detectionTime else as.integer(NA)
   )
-  res$lag_tones <- res$pos_when_change_detected - (row$transition + length(alphabet))
+  # res$lag_tones <- res$pos_when_change_detected - (row$transition + length(alphabet))
+  res$lag_tones <- res$pos_when_change_detected - row$transition
   res
 }
 
@@ -131,6 +133,8 @@ add_change_points <- function(data, cp_par, alphabet) {
   data
 }
 
-R.utils::mkdirs("cache/add_change_points")
-add_change_points <- memoise::memoise(add_change_points, 
-                                      cache = memoise::cache_filesystem("cache/add_change_points"))
+R.utils::mkdirs("/Downloads/peter/cache/add_change_points")
+add_change_points <- memoise::memoise(
+  add_change_points, 
+  cache = memoise::cache_filesystem("/Downloads/peter/cache/add_change_points")
+)

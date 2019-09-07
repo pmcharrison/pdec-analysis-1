@@ -31,10 +31,13 @@ check_data_exp_1 <- function(df) {
 
 # Check the output of experiment 4a compilation
 check_data_exp_4a <- function(df) {
-  df %>% select(condition, cond) %>% table
-  
-  browser()
-  
+  df %>% select(condition, cond) %>% unique %>% arrange(condition) %>%
+    na.omit() %>% 
+    mutate(cond = as.character(cond)) %>% 
+    expect_equal(tribble(~ condition, ~ cond,
+                         1L, "TARGET", 
+                         2L, "RANDREG"))
+
   # Check that condition == 1 corresponds to cond == TARGET or NA
   df %>% filter(condition == 1 & !is.na(cond)) %>% 
     transmute(test = cond == "TARGET") %>% 
@@ -49,8 +52,8 @@ check_data_exp_4a <- function(df) {
     any %>% 
     stopifnot()
   
-  # All participants took 410 stimuli
-  (table(df$subj) == 410) %>% all %>% stopifnot
+  # All participants took 300 stimuli
+  (table(df$subj) == 27 + 108 + 135 + 15 + 15) %>% all %>% stopifnot
   
   # All participants took 5 blocks
   df %>% group_by(subj) %>% summarise(n_block = length(unique(block))) %>% 
