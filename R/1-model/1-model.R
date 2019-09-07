@@ -65,12 +65,19 @@ set.seed(1)
 x2 <- ppm_dataset(
   data = dat$exp_1$data, # %>% filter(subj %in% 1:5),
   alphabet = dat$exp_1$alphabet,
-  ppm_par = ppm_pars$stm_ltm_decay,
+  ppm_par = c(
+    stm_weight = 1,
+    stm_duration = 5,
+    ltm_weight = 0.01,
+    ltm_half_life = 400,
+    noise = 0.4,
+    order_bound = 10
+  ),
   opt = opt
 )
 plot_ic_profile(x2 %>% filter(subj == 1), opt, span = 0.25, xlim = c(NA, 50))
 plot_ic_profile_2(x2, opt)
-plot_blocks(x2)
+plot_blocks(x2, error_bar = TRUE, line = TRUE, ribbon = FALSE)
 
 set.seed(1)
 y1 <- ppm_dataset(
