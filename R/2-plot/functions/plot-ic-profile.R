@@ -10,8 +10,9 @@ get_ic_profile_data <- function(x) {
     bind_rows()
 }
 
-plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA)) {
-  x %>% 
+plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA), 
+                            ribbon = TRUE) {
+  p <- x %>% 
     filter(!is.na(cond)) %>% 
     filter(cond == "TARGET" & block %in% c(1, 5)) %>% 
     select(block, transition, mod_pos_when_change_detected, mod) %>% 
@@ -28,9 +29,13 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA)) 
     bind_rows() %>% 
     group_by(block, rel_pos) %>% 
     summarise(ic_mean = mean(information_content),
-              ic_sd = sd(information_content)) %>% 
+              ic_sd = sd(information_content),
+              n = n(),
+              ic_se = ic_sd / sqrt(n),
+              ic_upper_95 = ic_mean + 1.96 * ic_se,
+              ic_lower_95 = ic_mean - 1.96 * ic_se) %>% 
     filter(rel_pos >= -10) %>% 
-    ggplot(aes(rel_pos, ic_mean, ymin = ic_mean - ic_sd, ymax = ic_mean + ic_sd, 
+    ggplot(aes(rel_pos, ic_mean, ymin = ic_lower_95, ymax = ic_upper_95, 
                colour = block, fill = block)) +
     {if (loess) 
       geom_smooth(span = span, method = "loess", se = FALSE) else
@@ -45,7 +50,10 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA)) 
     scale_colour_viridis_d(NULL) +
     scale_fill_viridis_d(NULL) +
     theme(aspect.ratio = 1)
-  # geom_ribbon(alpha = 0.2, colour = "black") + 
+  
+  if (ribbon) p <- p + geom_ribbon(alpha = 0.2, linetype = "blank")
+  
+  p
   # geom_vline(aes(xintercept = mod_pos_when_change_detected), df2, linetype = "dashed") +
   # facet_wrap(~ block, ncol = 1)
 }
