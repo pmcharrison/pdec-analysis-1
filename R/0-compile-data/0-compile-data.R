@@ -31,11 +31,9 @@ data$exp_7 <- compile_data(
   path_stim = "input/exp7_immediaterep/stimuli",
   format_stim = "stimuli_subj_%i_exp7_immediaterep.txt",
   format_stim_desc = "stimDescription_subj_%i_exp7_immediaterep.txt",
-  max_block = 5L,
-  subj_exclude = 20 
+  max_block = 5L
+  # subj_exclude = 20 
 )
-# Subject 20 is excluded because their data seems to have been corrupted,
-# with condition numbers not aligning properly with the main dataset.
 check_data_exp_7(data$exp_7$data)
 
 saveRDS(data, "output/data-00-participants.rds")

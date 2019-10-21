@@ -7,7 +7,6 @@ ppm_dataset <- function(data, alphabet, ppm_par, opt) {
 
 add_ppm_ic <- function(data, ppm_par, alphabet, tone_length) {
   stopifnot(order(data$subj, data$block, data$trialN) == seq_len(nrow(data)))
-  
   data %>% 
     group_by(subj) %>% 
     mutate(
@@ -55,11 +54,16 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   mod <- ppm::new_ppm_decay(alphabet_size = length(alphabet),
                             ltm_weight = ppm_par[["ltm_weight"]],
                             ltm_half_life = ppm_par[["ltm_half_life"]],
+                            ltm_asymptote = ppm_par[["ltm_asymptote"]],
                             noise = ppm_par[["noise"]],
                             stm_weight = ppm_par[["stm_weight"]],
                             stm_duration = ppm_par[["stm_duration"]],
+                            buffer_weight = ppm_par[["buffer_weight"]],
+                            buffer_length_time = ppm_par[["buffer_length_time"]],
+                            buffer_length_items = ppm_par[["buffer_length_items"]],
+                            only_learn_from_buffer = ppm_par[["only_learn_from_buffer"]],
+                            only_predict_from_buffer = ppm_par[["only_predict_from_buffer"]],
                             order_bound = ppm_par[["order_bound"]])
-  
   message("Performing information_theoretic analyses on subject ", subj, "...")
   
   N <- length(seqs)
@@ -67,6 +71,7 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   res <- vector(mode = "list", length = N)
   for (i in seq_len(N)) {
     seq <- factor(seqs[[i]], levels = alphabet)
+    if (i == 255) browser()
     res[[i]] <- ppm::model_seq(
       model = mod, 
       seq = seq,
@@ -74,7 +79,9 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
                  by = tone_length, 
                  length.out = length(seqs[[i]])),
       return_distribution = FALSE
+      # train = FALSE
     )
+    warning("delete train option")
     
     utils::setTxtProgressBar(pb, value = i)
   }
@@ -83,9 +90,9 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   res
 }
 
-R.utils::mkdirs("/Downloads/peter/cache/ic_subj")
+R.utils::mkdirs("~/Downloads/cache/ic_subj")
 ic_subj <- memoise::memoise(ic_subj, 
-                            cache = memoise::cache_filesystem(path = "/Downloads/peter/cache/ic_subj"))
+                            cache = memoise::cache_filesystem(path = "~/Downloads/cache/ic_subj"))
 
 cp_trial <- function(row, cp_par, alphabet) {
   x <- row$mod[[1]]$information_content
@@ -133,8 +140,8 @@ add_change_points <- function(data, cp_par, alphabet) {
   data
 }
 
-R.utils::mkdirs("/Downloads/peter/cache/add_change_points")
+R.utils::mkdirs("~/Downloads/cache/add_change_points")
 add_change_points <- memoise::memoise(
   add_change_points, 
-  cache = memoise::cache_filesystem("/Downloads/peter/cache/add_change_points")
+  cache = memoise::cache_filesystem("~/Downloads/cache/add_change_points")
 )

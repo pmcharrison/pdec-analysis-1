@@ -1,5 +1,4 @@
 source("R/1-model/1-setup.R")
-
 library(tidyverse)
 theme_set(theme_bw())
 
@@ -60,6 +59,7 @@ x1 <- ppm_dataset(
   ppm_par = ppm_pars$orig,
   opt = opt
 )
+plot_blocks(x1)
 
 set.seed(1)
 x2 <- ppm_dataset(
@@ -75,9 +75,9 @@ x2 <- ppm_dataset(
   ),
   opt = opt
 )
-plot_ic_profile(x2 %>% filter(subj == 1), opt, span = 0.25, xlim = c(NA, 50))
-plot_ic_profile_2(x2, opt)
-plot_blocks(x2, error_bar = TRUE, line = TRUE, ribbon = FALSE)
+plot_ic_profile(x2 %>% filter(block == 5 | rep == 1), opt, loess = FALSE, xlim = c(NA, 50))
+plot_ic_profile_2(x2 %>% filter(block == 5 | rep == 1), opt)
+plot_blocks(x2 %>% filter(model_reaction_time > 0), error_bar = TRUE, line = TRUE, ribbon = FALSE)
 
 set.seed(1)
 y1 <- ppm_dataset(
@@ -109,25 +109,73 @@ y2 %>%
 
 set.seed(1)
 z1 <- ppm_dataset(
-  data = dat$exp_7$data, # %>% filter(subj %in% 1:5),
+  data = dat$exp_7$data %>% filter(subj %in% 1:5),
   alphabet = dat$exp_7$alphabet,
   ppm_par = ppm_pars$orig,
   opt = opt
 )
+plot_blocks(
+  z1 %>% filter(block %in% 1:4), 
+  cond_list = c(
+    "#1471B9" = "RANREG",
+    "#EEC00D" = "RANREGr",
+    "#CD534B" = "REPinRAN",
+    "#00FF00" = "REPinRANr"
+  ), 
+  subtract_1_sec_from = c("RANREG", "RANREGr"),
+  error_bar = TRUE, ribbon = FALSE
+)
+
+# Note: in the first few experiments (1 and 4), 
+# our reaction times were plotted relative to the beginning of the regular phase.
+# So, an untrained ideal observer model should take about 1.3 seconds to detect
+# the phase change - 1 second to observe a complete cycle, then 0.3 seconds to 
+# see that this cycle is repeating.
+# When the cycle is familiar from a previous trial, the ideal observer doesn't need
+# the 1-second component, and just takes c. 0.3 seconds to detect the phase change.
+
+# In experiment 8, we change the plotting convention. We subtract 1 second 
+# from the RANREG and RANREGr conditions; this means that 0 corresponds to the 
+# onset of the second cycle. This is for comparability with the REPinRAN and REPinRANr 
+# conditions, where 0 also corresponds to the onset of the second cycle.
+# We have to subtract 1 because the underlying reaction time data still
+# defines the zero as the onset of the first cycle, not the onset of the second cycle.
+
+# v1 (ltm_weight = 0.01, ltm_half_life = 1000): REPinRAN is too difficult
+# v2 (ltm_weight = 0.1, ltm_half_life = 500)
+# v3 (ltm_weight = 0.1, ltm_half_life = 50): I think we need a buffer
+# v4 ()
 
 set.seed(1)
 z2 <- ppm_dataset(
-  data = dat$exp_7$data %>% filter(subj %in% 1:5),
+  data = dat$exp_7$data %>% filter(subj %in% 1:16),
   alphabet = dat$exp_7$alphabet,
-  ppm_par = ppm_pars$stm_ltm_decay,
+  ppm_par = list( # These parameters should make REPinRAN(r) fail but ???? weird pattern of results
+    # buffer_length_time = 2,
+    buffer_weight = 1,
+    buffer_length_time = 0,
+    buffer_length_items = 0,
+    only_learn_from_buffer = FALSE,
+    only_predict_from_buffer = FALSE,
+    stm_weight = 1,
+    stm_duration = 0.1,
+    ltm_weight = 0.001,
+    ltm_asymptote = 0, 
+    ltm_half_life = 0.1,
+    noise = 0.5,
+    order_bound = 4
+  ),
   opt = opt
 )
-# plot_blocks(z2, cond_list = c(
-#   "#1471B9" = "RANREG",
-#   "#EEC00D" = "RANREGr",
-#   "REPinRAN",
-#   "REPinRANr"
-# ))
+plot_blocks(z2 %>% filter(block %in% 1:4), 
+            cond_list = c(
+              "#1471B9" = "RANREG",
+              "#EEC00D" = "RANREGr",
+              "#CD534B" = "REPinRAN",
+              "#00FF00" = "REPinRANr"
+            ),
+            subtract_1_sec_from = c("RANREG", "RANREGr"),
+            error_bar = TRUE, ribbon = FALSE)
 
 x2 %>%
   mutate(condition = recode(condition, 
@@ -223,46 +271,7 @@ z1 %>%
 #   geom_point()
   
 
-plot_blocks <- function(x, 
-                        cond_list = c("#1471B9" = "RANDREG",
-                                      "#EEC00D" = "TARGET"),
-                        hline_1 = NULL,
-                        hline_2 = NULL,
-                        error_bar = FALSE,
-                        ribbon = TRUE,
-                        line = TRUE) {
-  p <- x %>% 
-    filter(cond %in% cond_list &
-             !is.na(model_reaction_time)) %>%
-    mutate(cond = factor(cond, levels = cond_list)) %>% 
-    group_by(block, cond) %>% 
-    summarise(human_rt = mean(RTadj),
-              rt_mean = mean(model_reaction_time),
-              rt_n = n(),
-              rt_sd = sd(model_reaction_time),
-              rt_se = rt_sd / sqrt(rt_n),
-              rt_95_lower = rt_mean - 1.96 * rt_se,
-              rt_95_upper = rt_mean + 1.96 * rt_se) %>% {print(.); .} %>% 
-    ggplot(aes(x = block, y = rt_mean, 
-               ymin = rt_95_lower, ymax = rt_95_upper,
-               colour = cond,
-               fill = cond)) +
-    scale_color_manual(values = names(cond_list)) +
-    scale_fill_manual(values = names(cond_list)) + 
-    geom_point()
-  
-  if (!is.null(hline_1)) 
-    p <- p + geom_hline(yintercept = hline_1, linetype = "dotted")
-  
-  if (!is.null(hline_2)) 
-    p <- p + geom_hline(yintercept = hline_2, linetype = "dotted")
-  
-  if (line) p <- p + geom_line()
-  if (error_bar) p <- p + geom_errorbar(width = 0.1)
-  if (ribbon) p <- p + geom_ribbon(alpha = 0.1, colour = "white")
-  
-  p
-}
+
 
 plot_blocks(x)
 

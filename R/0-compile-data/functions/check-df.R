@@ -1,3 +1,5 @@
+library(testthat)
+
 # Check the output of the first experiment compilation
 check_data_exp_1 <- function(df) {
   df %>% select(condition, cond) %>% table
