@@ -1,3 +1,5 @@
+# TODO - factor in condition -> cond (with sanity checks)
+
 source("R/1-model/1-setup.R")
 library(tidyverse)
 theme_set(theme_bw())
@@ -5,6 +7,7 @@ theme_set(theme_bw())
 opt <- list(
   seq_length = 20L, # number of tones
   tone_length = 0.05,
+  response_time = 1,
   cp = list(
     method = "Mann-Whitney",
     t1_error_rate = 10000,
@@ -151,18 +154,27 @@ z2 <- ppm_dataset(
   data = dat$exp_7$data %>% filter(subj %in% 1:16),
   alphabet = dat$exp_7$alphabet,
   ppm_par = list( # These parameters should make REPinRAN(r) fail but ???? weird pattern of results
-    # buffer_length_time = 2,
+    buffer_length_time = 2,
+    buffer_length_time = 2,
+    buffer_length_items = 1e6,
+    only_learn_from_buffer = TRUE,
+    only_predict_from_buffer = TRUE,
+    
     buffer_weight = 1,
-    buffer_length_time = 0,
-    buffer_length_items = 0,
-    only_learn_from_buffer = FALSE,
-    only_predict_from_buffer = FALSE,
+    
+    # buffer_length_time = 0,
+    # buffer_weight = 1,
+    # buffer_length_time = 0,
+    # buffer_length_items = 0,
+    # only_learn_from_buffer = FALSE,
+    # only_predict_from_buffer = FALSE,
+    
     stm_weight = 1,
-    stm_duration = 0.1,
-    ltm_weight = 0.001,
+    stm_duration = 10,
+    ltm_weight = 0.01,
+    ltm_half_life = 1000,
     ltm_asymptote = 0, 
-    ltm_half_life = 0.1,
-    noise = 0.5,
+    noise = 0.85,
     order_bound = 4
   ),
   opt = opt
@@ -175,6 +187,15 @@ plot_blocks(z2 %>% filter(block %in% 1:4),
               "#00FF00" = "REPinRANr"
             ),
             subtract_1_sec_from = c("RANREG", "RANREGr"),
+            error_bar = TRUE, ribbon = FALSE)
+
+plot_blocks(z2 %>% filter(block %in% 5), 
+            cond_list = c(
+              "#1471B9" = "RANREG",
+              "#EEC00D" = "RANREGr",
+              "#00FF00" = "REPinRANr"
+            ),
+            subtract_1_sec_from = c("RANREG", "RANREGr", "REPinRANr"),
             error_bar = TRUE, ribbon = FALSE)
 
 x2 %>%

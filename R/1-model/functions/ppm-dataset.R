@@ -1,16 +1,16 @@
 ppm_dataset <- function(data, alphabet, ppm_par, opt) {
   data %>% 
-    add_ppm_ic(ppm_par, alphabet, opt$tone_length) %>% 
+    add_ppm_ic(ppm_par, alphabet, opt$tone_length, opt$response_time) %>% 
     add_change_points(opt$cp, alphabet) %>% 
     mutate(model_reaction_time = mod_lag_tones * opt$tone_length)
 }
 
-add_ppm_ic <- function(data, ppm_par, alphabet, tone_length) {
+add_ppm_ic <- function(data, ppm_par, alphabet, tone_length, response_time) {
   stopifnot(order(data$subj, data$block, data$trialN) == seq_len(nrow(data)))
   data %>% 
     group_by(subj) %>% 
     mutate(
-      time = estimate_trial_time(block, trialN),
+      time = estimate_trial_time(block, trialN, seq, tone_length, !!response_time),
       mod = ic_subj(seq, 
                     time,
                     alphabet = !!alphabet,
@@ -21,29 +21,36 @@ add_ppm_ic <- function(data, ppm_par, alphabet, tone_length) {
     ungroup()
 }
 
-estimate_trial_time <- function(block, trialN) {
-  estimate_block_time(block) + (trialN - 1) * 8
+estimate_trial_time <- function(block, trialN, seq, tone_length, response_time) {
+  stopifnot(all(block < 6))
+  checkmate::qassert(response_time, "N1[0,)")
+  all_trial_n <- seq_along(seq)
+  seq_num_tones <- map_int(seq, length)
+  seq_durations <- (seq_num_tones * tone_length) + response_time
+  seq_ends <- cumsum(seq_durations)
+  seq_starts <- c(0, seq_ends[- length(seq_ends)])
+  seq_starts
 }
 
-estimate_block_time <- function(block) {
-  # Each sequence is 7 seconds long, add a second for response -> 8 seconds per trial
-  # 60 trials per block -> 480 seconds per block, + 20 seconds for break -> 500 seconds per block
-  
-  # Blocks 1-5 are on day 1 
-  # Block 6 is on day 2
-  # Block 7 is on day 3
-  
-  stopifnot(all(block %in% 1:5))
-  
-  recode(block,
-         `1` = 8.1 * 60 * 0,
-         `2` = 8.1 * 60 * 1,
-         `3` = 8.1 * 60 * 2,
-         `4` = 8.1 * 60 * 3,
-         `5` = 8.1 * 60 * 4)
-  # `6` = 24 * 60 * 60,
-  # `7` = 7 * 7 * 24 * 60 * 60)
-}
+# estimate_block_time <- function(block) {
+#   # Each sequence is 7 seconds long, add a second for response -> 8 seconds per trial
+#   # 60 trials per block -> 480 seconds per block, + 20 seconds for break -> 500 seconds per block
+#   
+#   # Blocks 1-5 are on day 1 
+#   # Block 6 is on day 2
+#   # Block 7 is on day 3
+#   
+#   stopifnot(all(block %in% 1:5))
+#   
+#   recode(block,
+#          `1` = 8.1 * 60 * 0,
+#          `2` = 8.1 * 60 * 1,
+#          `3` = 8.1 * 60 * 2,
+#          `4` = 8.1 * 60 * 3,
+#          `5` = 8.1 * 60 * 4)
+#   # `6` = 24 * 60 * 60,
+#   # `7` = 7 * 7 * 24 * 60 * 60)
+# }
 
 ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
   stopifnot(is.list(seqs), length(subj) == 1)
@@ -65,13 +72,11 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
                             only_predict_from_buffer = ppm_par[["only_predict_from_buffer"]],
                             order_bound = ppm_par[["order_bound"]])
   message("Performing information_theoretic analyses on subject ", subj, "...")
-  
   N <- length(seqs)
   pb <- utils::txtProgressBar(max = N, style = 3)
   res <- vector(mode = "list", length = N)
   for (i in seq_len(N)) {
     seq <- factor(seqs[[i]], levels = alphabet)
-    if (i == 255) browser()
     res[[i]] <- ppm::model_seq(
       model = mod, 
       seq = seq,
@@ -79,10 +84,7 @@ ic_subj <- function(seqs, start_times, alphabet, ppm_par, subj, tone_length) {
                  by = tone_length, 
                  length.out = length(seqs[[i]])),
       return_distribution = FALSE
-      # train = FALSE
     )
-    warning("delete train option")
-    
     utils::setTxtProgressBar(pb, value = i)
   }
   close(pb)
