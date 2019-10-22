@@ -13,9 +13,11 @@ plot_block <- function(x,
                fill = cond)) + 
     geom_point() +
     geom_errorbar() +
+    scale_x_discrete(NULL) +
     scale_y_continuous("Reaction time (s)") +
     scale_color_manual(values = names(cond_list)) +
-    scale_fill_manual(values = names(cond_list)) 
+    scale_fill_manual(values = names(cond_list)) +
+    theme(legend.position = "none")
 }
 
 summarise_blocks <- function(x, cond_list, subtract_1_sec_from) {
