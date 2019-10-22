@@ -1,5 +1,3 @@
-# TODO - factor in condition -> cond (with sanity checks)
-
 source("R/1-model/1-setup.R")
 library(tidyverse)
 theme_set(theme_bw())
@@ -105,14 +103,14 @@ y2 <- ppm_dataset(
   ),
   opt = opt
 )
-  
+
 y2 %>% 
   filter(model_reaction_time > 0) %>% 
   plot_blocks(error_bar = TRUE, line = FALSE, ribbon = FALSE)
 
 set.seed(1)
 z1 <- ppm_dataset(
-  data = dat$exp_7$data %>% filter(subj %in% 1:5),
+  data = dat$exp_7$data %>% filter(subj %in% 1:16),
   alphabet = dat$exp_7$alphabet,
   ppm_par = ppm_pars$orig,
   opt = opt
@@ -187,7 +185,16 @@ plot_blocks(z2 %>% filter(block %in% 1:4),
               "#00FF00" = "REPinRANr"
             ),
             subtract_1_sec_from = c("RANREG", "RANREGr"),
-            error_bar = TRUE, ribbon = FALSE)
+            error_bar = FALSE, ribbon = TRUE)
+
+plot_block(z2, 
+           block = 5,
+           cond_list = c(
+             "#1471B9" = "RANREG",
+             "#EEC00D" = "RANREGr",
+             "#00FF00" = "REPinRANr"
+           ),
+           subtract_1_sec_from = c("RANREG", "RANREGr", "REPinRANr"))
 
 plot_blocks(z2 %>% filter(block %in% 5), 
             cond_list = c(
@@ -239,7 +246,7 @@ z2 %>%
 
 
 z1 %>% 
-# dat$exp_7$data %>% 
+  # dat$exp_7$data %>% 
   mutate(condition = recode(condition, 
                             `1` = 'RREGr',
                             `2` = 'RREG',
@@ -250,13 +257,13 @@ z1 %>%
                             `7` ='REPinRAN')) %>% 
   filter(block == 5) %>% 
   pull(condition) %>% table
-  
-  filter(condition == "REPinRANr" & block == 5) %>% 
+
+filter(condition == "REPinRANr" & block == 5) %>% 
   slice(4) %>% pull(mod) %>% `[[`(1) %>% select(pos, information_content) %>% mutate(pos = pos - min(pos)) %>% plot
-  
-  
-  
-  filter(block == 5) %>% 
+
+
+
+filter(block == 5) %>% 
   filter(condition %in% c("RREGr", "RREG", "REPinRANr")) %>% 
   group_by(condition) %>% 
   summarise(model_hit_rate = mean(!is.na(model_reaction_time)),
@@ -290,7 +297,7 @@ z1 %>%
 #   summarise(human_rt = mean(RTadj, na.rm = TRUE)) %>% 
 #   ggplot(aes(x = block, y = human_rt, colour = cond)) + 
 #   geom_point()
-  
+
 
 
 
