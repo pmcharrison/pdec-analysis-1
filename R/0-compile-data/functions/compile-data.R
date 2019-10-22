@@ -28,7 +28,8 @@ compile_data <- function(path_response,
                df_trials = df_trials,
                df_stimuli = df_stimuli,
                df_resp = df_resp,
-               max_block = max_block)
+               max_block = max_block) %>% 
+    infer_cond()
 
   alphabet <- get_alphabet(df)
   

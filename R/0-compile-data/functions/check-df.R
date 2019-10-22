@@ -38,7 +38,10 @@ check_data_exp_4a <- function(df) {
     mutate(cond = as.character(cond)) %>% 
     expect_equal(tribble(~ condition, ~ cond,
                          1L, "TARGET", 
-                         2L, "RANDREG"))
+                         2L, "RANDREG",
+                         3L, "3",
+                         4L, "4",
+                         5L, "5"))
 
   # Check that condition == 1 corresponds to cond == TARGET or NA
   df %>% filter(condition == 1 & !is.na(cond)) %>% 
@@ -75,6 +78,9 @@ check_data_exp_7 <- function(df) {
       ~ cond,    ~ condition,
       "RANREGr",  1L,
       "RANREG",   2L,
+      "3", 3L,
+      "4", 4L,
+      "5", 5L,
       "REPinRANr", 6L,
       "REPinRAN",  7L,
     ))
