@@ -13,3 +13,4 @@ for (f in list.files("R/1-model/functions/", full.names = TRUE, pattern = "\\.R$
   source(f)
 
 source("R/2-plot/functions/plot-ic-profile.R")
+source("R/2-plot/functions/plot-blocks.R")

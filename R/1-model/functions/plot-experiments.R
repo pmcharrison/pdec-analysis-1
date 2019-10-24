@@ -1,9 +1,15 @@
 plot_experiments <- function(res) {
-  plot_blocks(res$exp_1$orig %>% filter(model_reaction_time > 0), error_bar = TRUE, line = TRUE, ribbon = FALSE)
-  plot_blocks(res$exp_1$optim %>% filter(model_reaction_time > 0), error_bar = TRUE, line = TRUE, ribbon = FALSE)
-  
-  plot_blocks(res$exp_4a$orig %>% filter(model_reaction_time > 0), error_bar = TRUE, line = TRUE, ribbon = FALSE)
-  plot_blocks(res$exp_4a$optim %>% filter(model_reaction_time > 0), error_bar = TRUE, line = TRUE, ribbon = FALSE)
+  panel_1 <- egg::ggarrange(
+    plot_blocks(res$exp_1$orig, error_bar = TRUE, line = TRUE, ribbon = FALSE) + theme(legend.position = "none"),
+    plot_blocks(res$exp_1$optim, error_bar = TRUE, line = TRUE, ribbon = TRUE) + scale_y_continuous(NULL),
+    nrow = 1
+  )
+
+  panel_2 <- egg::ggarrange(
+    plot_blocks(res$exp_4a$orig, error_bar = TRUE, line = FALSE, ribbon = FALSE) + theme(legend.position = "none"),
+    plot_blocks(res$exp_4a$optim, error_bar = TRUE, line = FALSE, ribbon = FALSE) + scale_y_continuous(NULL),
+    nrow = 1
+  )
   
   # Note: in the first few experiments (1 and 4), 
   # our reaction times were plotted relative to the beginning of the regular phase.
@@ -20,8 +26,8 @@ plot_experiments <- function(res) {
   # We have to subtract 1 because the underlying reaction time data still
   # defines the zero as the onset of the first cycle, not the onset of the second cycle.
   
-  map(res$exp_7, function(z) {
-    plot_blocks(
+  exp_7_plots <- map(res$exp_7, function(z) {
+    p1 <- plot_blocks(
       z %>% filter(block %in% 1:4), 
       cond_list = c(
         "#1471B9" = "RANREG",
@@ -33,7 +39,7 @@ plot_experiments <- function(res) {
       error_bar = TRUE, ribbon = FALSE
     )
     
-    plot_block(z2, 
+    p2 <- plot_block(z, 
                block = 5,
                cond_list = c(
                  "#1471B9" = "RANREG",
@@ -41,5 +47,25 @@ plot_experiments <- function(res) {
                  "#00FF00" = "REPinRANr"
                ),
                subtract_1_sec_from = c("RANREG", "RANREGr", "REPinRANr"))
+    list(blocks_1_to_4 = p1, 
+         block_5 = p2)
   })
+  
+  panel_3 <- egg::ggarrange(
+    exp_7_plots$orig$blocks_1_to_4 + theme(legend.position = "none"),
+    exp_7_plots$optim$blocks_1_to_4 + scale_y_continuous(NULL),
+    nrow = 1
+  )
+  
+  panel_4 <- egg::ggarrange(
+    exp_7_plots$orig$block_5 + theme(legend.position = "none"),
+    exp_7_plots$optim$block_5 + scale_y_continuous(NULL),
+    nrow = 1
+  )
+  
+  cowplot::plot_grid(panel_1, panel_2, panel_3, panel_4,
+                     ncol = 1,
+                     labels = "AUTO", 
+                     rel_heights = c(1, 1, 1, 0.85))
+                     # labels = c("Exp. 1", "Exp. 4a", "Exp. 7 (1-4)", "Exp. 7 (5)"))
 }

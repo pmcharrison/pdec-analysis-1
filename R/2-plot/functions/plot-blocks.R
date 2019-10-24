@@ -5,26 +5,30 @@ plot_block <- function(x,
                        subtract_1_sec_from = character()) {
   stopifnot(length(block) == 1)
   x %>% 
-    filter(block == !!block) %>% 
+    filter(block == !!block &
+             !is.na(model_reaction_time) &
+             model_reaction_time > 0) %>% 
     summarise_blocks(cond_list, subtract_1_sec_from) %>%
     ggplot(aes(cond, rt_mean, 
                ymin = rt_95_lower, ymax = rt_95_upper,
                colour = cond,
                fill = cond)) + 
     geom_point() +
-    geom_errorbar() +
+    geom_errorbar(width = 0.5) +
     scale_x_discrete(NULL) +
     scale_y_continuous("Reaction time (s)") +
-    scale_color_manual(values = names(cond_list)) +
-    scale_fill_manual(values = names(cond_list)) +
-    theme(legend.position = "none")
+    scale_color_manual("Condition", values = names(cond_list)) +
+    scale_fill_manual("Condition", values = names(cond_list)) +
+    theme(aspect.ratio = 1,
+          axis.text.x = element_blank())
 }
 
 summarise_blocks <- function(x, cond_list, subtract_1_sec_from) {
   stopifnot(all(subtract_1_sec_from %in% cond_list))
   x %>% 
     filter(cond %in% cond_list &
-             !is.na(model_reaction_time)) %>% 
+             !is.na(model_reaction_time) &
+             model_reaction_time > 0) %>% 
     mutate(cond = factor(cond, levels = cond_list),
            RTadj = if_else(cond %in% subtract_1_sec_from,
                            RTadj - 1,
@@ -34,12 +38,12 @@ summarise_blocks <- function(x, cond_list, subtract_1_sec_from) {
                                          model_reaction_time)) %>% 
     group_by(block, cond) %>% 
     summarise(# human_rt = mean(RTadj, na.rm = TRUE),
-              rt_mean = mean(model_reaction_time),
-              rt_n = n(),
-              rt_sd = sd(model_reaction_time),
-              rt_se = rt_sd / sqrt(rt_n),
-              rt_95_lower = rt_mean - 1.96 * rt_se,
-              rt_95_upper = rt_mean + 1.96 * rt_se) %>% 
+      rt_mean = mean(model_reaction_time),
+      rt_n = n(),
+      rt_sd = sd(model_reaction_time),
+      rt_se = rt_sd / sqrt(rt_n),
+      rt_95_lower = rt_mean - 1.96 * rt_se,
+      rt_95_upper = rt_mean + 1.96 * rt_se) %>% 
     ungroup()
 }
 
@@ -58,10 +62,12 @@ plot_blocks <- function(x,
                ymin = rt_95_lower, ymax = rt_95_upper,
                colour = cond,
                fill = cond)) +
+    scale_x_continuous("Block") +
     scale_y_continuous("Reaction time (s)") +
-    scale_color_manual(values = names(cond_list)) +
-    scale_fill_manual(values = names(cond_list)) + 
-    geom_point()
+    scale_color_manual("Condition", values = names(cond_list)) +
+    scale_fill_manual("Condition", values = names(cond_list)) + 
+    geom_point() +
+    theme(aspect.ratio = 1)
   
   if (!is.null(hline_1)) 
     p <- p + geom_hline(yintercept = hline_1, linetype = "dotted")
@@ -71,7 +77,7 @@ plot_blocks <- function(x,
   
   if (line) p <- p + geom_line()
   if (error_bar) p <- p + geom_errorbar(width = 0.1)
-  if (ribbon) p <- p + geom_ribbon(alpha = 0.1, colour = "white")
+  if (ribbon) p <- p + geom_ribbon(alpha = 0.1, colour = NA)
   
   p
 }

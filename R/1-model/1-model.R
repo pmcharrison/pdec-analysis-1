@@ -54,5 +54,7 @@ ppm_par <- list(
 
 dat <- readRDS(file = "output/data-00-participants.rds")
 
+
 res <- analyse_experiments(data, opt, ppm_par)
-if (FALSE) plot_experiments(res)
+saveRDS(res, "output/model-results.rds")
+plot_experiments(res)
