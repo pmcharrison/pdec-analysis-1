@@ -4,10 +4,24 @@ plot_experiments <- function(res) {
     plot_blocks(res$exp_1$optim, error_bar = TRUE, line = TRUE, ribbon = TRUE) + scale_y_continuous(NULL),
     nrow = 1
   )
+  
+  exp_2_blocks <- function(x) {
+    plyr::mapvalues(x, 1:5, c(1, 1.5, 2, 2.5, 3))
+  }
 
   panel_2 <- egg::ggarrange(
-    plot_blocks(res$exp_4a$orig, error_bar = TRUE, line = FALSE, ribbon = FALSE) + theme(legend.position = "none"),
-    plot_blocks(res$exp_4a$optim, error_bar = TRUE, line = FALSE, ribbon = FALSE) + scale_y_continuous(NULL),
+    plot_blocks(res$exp_4a$orig %>% mutate(block = exp_2_blocks(block)), 
+                error_bar = TRUE, 
+                line = FALSE,
+                ribbon = FALSE) + 
+      scale_x_continuous("Block", breaks = 1:3) +
+      theme(legend.position = "none"),
+    plot_blocks(res$exp_4a$optim %>% mutate(block = exp_2_blocks(block)),
+                error_bar = TRUE, 
+                line = FALSE,
+                ribbon = FALSE) +
+      scale_x_continuous("Block", breaks = 1:3) +
+      scale_y_continuous(NULL),
     nrow = 1
   )
   

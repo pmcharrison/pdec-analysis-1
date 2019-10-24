@@ -1,0 +1,75 @@
+# Attempt 1
+
+optim = list(
+    buffer_length_time = 2,
+    buffer_weight = 1,
+    buffer_length_items = 1e6,
+    only_learn_from_buffer = TRUE,
+    only_predict_from_buffer = TRUE,
+    
+    stm_weight = 1,
+    stm_duration = 10,
+    
+    ltm_weight = 0.01,
+    ltm_half_life = 1000,
+    ltm_asymptote = 0, 
+    
+    noise = 0.85,
+    order_bound = 4
+  )
+
+Exp 1 overperforms significantly (starts at 1.4, not 1.8)
+and fails to plateau.
+
+Similar for Exp 4.
+
+Exp 7 (1-4) likewise overperforms somewhat,
+and there could be a greater distinction between RANREG and REPinRAN conditions.
+
+# Attempt 2
+
+Noise: 0.85 -> 1 
+LTM half life: 1000 -> 500
+
+Still overperforming (Exps 1, 4a starting at 1.51, not 1.8)
+
+# Attempt 3: 
+
+Noise: 1 -> 1.5
+
+This is slightly too much noise. Also, there is not enough long-term learning.
+
+# Attempt 4:
+
+ltm_weight = 0.02
+noise = 1.4
+
+Pretty good, but there could be a better plateau, and REPinRAN could be more impaired.
+
+# Attempt 5:
+
+stm_duration 10 -> 5
+ltm_half_life 500 -> 300
+
+The improved plateau in experiments 1/4 comes at a cost of a failure
+to learn in block 5 of experiment 8. Best to reverse the ltm_half_life
+change, I think.
+
+REPinRAN could still be more impaired.
+
+# Attempt 6:
+
+stm_duration 5 -> 3
+ltm_half_life 300 -> 500
+
+REPinRAN could still be more impaired.
+
+# Attempt 7:
+
+stm_duration 3 -> 1
+
+Too far - now REPinRAN is missing lots of trials.
+
+# Attempt 8:
+
+stm_duration: 1 -> 5

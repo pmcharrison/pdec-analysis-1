@@ -41,13 +41,13 @@ ppm_par <- list(
     only_predict_from_buffer = TRUE,
     
     stm_weight = 1,
-    stm_duration = 10,
-    
-    ltm_weight = 0.01,
-    ltm_half_life = 1000,
+    stm_duration = 5,
+      
+    ltm_weight = 0.02,
+    ltm_half_life = 500,
     ltm_asymptote = 0, 
     
-    noise = 0.85,
+    noise = 1.4,
     order_bound = 4
   )
 )
@@ -57,4 +57,5 @@ dat <- readRDS(file = "output/data-00-participants.rds")
 
 res <- analyse_experiments(data, opt, ppm_par)
 saveRDS(res, "output/model-results.rds")
-plot_experiments(res)
+p <- plot_experiments(res)
+ggsave(paste0("output/plots/plot ", format(Sys.time()), " .png"), plot = p)
