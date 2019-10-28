@@ -34,20 +34,20 @@ ppm_par <- list(
   ),
   
   optim = list(
-    buffer_length_time = 2,
+    buffer_length_time = 1e6,
     buffer_weight = 1,
-    buffer_length_items = 1e6,
+    buffer_length_items = 15,
     only_learn_from_buffer = TRUE,
     only_predict_from_buffer = TRUE,
     
     stm_weight = 1,
-    stm_duration = 5,
+    stm_duration = 15,
       
     ltm_weight = 0.02,
     ltm_half_life = 500,
     ltm_asymptote = 0, 
     
-    noise = 1.4,
+    noise = 1.3,
     order_bound = 4
   )
 )

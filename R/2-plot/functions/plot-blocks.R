@@ -37,14 +37,19 @@ summarise_blocks <- function(x, cond_list, subtract_1_sec_from) {
                                          model_reaction_time - 1,
                                          model_reaction_time)) %>% 
     group_by(block, cond) %>% 
+    summarise_model_rt() %>% 
+    ungroup()
+}
+
+summarise_model_rt <- function(x) {
+  x %>% 
     summarise(# human_rt = mean(RTadj, na.rm = TRUE),
       rt_mean = mean(model_reaction_time),
       rt_n = n(),
       rt_sd = sd(model_reaction_time),
       rt_se = rt_sd / sqrt(rt_n),
       rt_95_lower = rt_mean - 1.96 * rt_se,
-      rt_95_upper = rt_mean + 1.96 * rt_se) %>% 
-    ungroup()
+      rt_95_upper = rt_mean + 1.96 * rt_se)
 }
 
 plot_blocks <- function(x, 

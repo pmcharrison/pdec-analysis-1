@@ -77,9 +77,48 @@ plot_experiments <- function(res) {
     nrow = 1
   )
   
-  cowplot::plot_grid(panel_1, panel_2, panel_3, panel_4,
+  panel_5 <- egg::ggarrange(
+    plot_block_5_by_presentation(res$exp_7$orig) + theme(legend.position = "none"),
+    plot_block_5_by_presentation(res$exp_7$optim) + scale_y_continuous(NULL), #+ theme(legend.position = "bottom", 
+                                                                              #       legend.direction = "vertical"),
+    nrow = 1
+  )
+
+  cowplot::plot_grid(panel_1, panel_2, panel_3, panel_4, panel_5,
                      ncol = 1,
                      labels = "AUTO", 
-                     rel_heights = c(1, 1, 1, 0.85))
+                     rel_heights = c(1, 1, 1, 0.85, 1))
                      # labels = c("Exp. 1", "Exp. 4a", "Exp. 7 (1-4)", "Exp. 7 (5)"))
+}
+
+plot_block_5_by_presentation <- function(
+  exp_7, 
+  cond_list = c(
+    "#1471B9" = "RANREG",
+    "#EEC00D" = "RANREGr",
+    "#00FF00" = "REPinRANr"
+  )) {
+  exp_7 %>% 
+    filter(block == 5 &
+             !is.na(rep) &
+             !is.na(model_reaction_time) &
+             model_reaction_time > 0 & 
+             cond %in% cond_list) %>% 
+    group_by(rep, cond) %>% 
+    summarise_model_rt() %>% 
+    select(rep, cond, rt_mean) %>% 
+    pivot_wider(names_from = cond, values_from = rt_mean) %>% 
+    ungroup() %>% 
+    transmute(rep = rep,
+              "RANREG - RANREGr*" = RANREG - REPinRANr,
+              "RANREG - RANREGr" = RANREG - RANREGr) %>% 
+    pivot_longer(cols = - rep) %>% 
+    ggplot(aes(rep, value, fill = name)) + 
+    geom_bar(stat = "identity", position = "dodge") + 
+    scale_x_continuous(NULL) +
+    scale_y_continuous("RT advantage (s)") + 
+    scale_fill_manual(NULL, values = c("RANREG - RANREGr*" = "#00FF00",
+                                       "RANREG - RANREGr" = "#EEC00D")) +
+    guides(fill = guide_legend(reverse = TRUE)) + 
+    theme(aspect.ratio = 1)
 }

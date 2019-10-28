@@ -73,3 +73,21 @@ Too far - now REPinRAN is missing lots of trials.
 # Attempt 8:
 
 stm_duration: 1 -> 5
+
+# Attempt 9:
+
+On request from Maria, shortening the buffer from 2 s to 0.75 seconds (15 tones),
+and increasing the STM duration from 5s to 6 s.
+
+In practice, the model still underperformed substantially.
+
+# Attempt 10
+
+stm_duration: 6 -> 15
+noise: 1.4 -> 1
+
+This looks good except the model now overperforms a bit.
+
+# Attempt 11
+
+noise: 1 -> 1.3
