@@ -104,17 +104,24 @@ plot_block_5_by_presentation <- function(
              !is.na(model_reaction_time) &
              model_reaction_time > 0 & 
              cond %in% cond_list) %>% 
-    group_by(rep, cond) %>% 
-    summarise_model_rt() %>% 
-    select(rep, cond, rt_mean) %>% 
-    pivot_wider(names_from = cond, values_from = rt_mean) %>% 
+    group_by(subj, rep, cond) %>% 
+    summarise(rt_mean = mean(model_reaction_time, na.rm = TRUE)) %>% 
+    
+    # summarise_model_rt() %>% 
+    # select(rep, cond, rt_mean) %>% 
+    pivot_wider(id_cols = c("subj", "rep"), names_from = cond, values_from = rt_mean) %>% 
     ungroup() %>% 
-    transmute(rep = rep,
-              "RANREG - RANREGr*" = RANREG - REPinRANr,
-              "RANREG - RANREGr" = RANREG - RANREGr) %>% 
-    pivot_longer(cols = - rep) %>% 
-    ggplot(aes(rep, value, fill = name)) + 
-    geom_bar(stat = "identity", position = "dodge") + 
+    mutate("RANREG - RANREGr*" = RANREG - REPinRANr,
+           "RANREG - RANREGr" = RANREG - RANREGr) %>% 
+    select(subj, rep, `RANREG - RANREGr*`, `RANREG - RANREGr`) %>% 
+    pivot_longer(cols = c("RANREG - RANREGr*",
+                          "RANREG - RANREGr"),
+                 values_to = "model_reaction_time") %>% 
+    group_by(rep, name) %>% 
+    summarise_model_rt(na.rm = TRUE) %>% 
+    ggplot(aes(rep, rt_mean, ymin = rt_95_lower, ymax = rt_95_upper, fill = name)) + 
+    geom_bar(stat = "identity", position = position_dodge(width = 1)) + 
+    geom_errorbar(width = 0.3, position = position_dodge(width = 1)) +
     scale_x_continuous(NULL) +
     scale_y_continuous("RT advantage (s)") + 
     scale_fill_manual(NULL, values = c("RANREG - RANREGr*" = "#00FF00",
