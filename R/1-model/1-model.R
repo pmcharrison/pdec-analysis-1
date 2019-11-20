@@ -64,7 +64,7 @@ ppm_par$optim %>% {
   tibble(Parameter = names(.),
          Value = unlist(.))
 } %>% 
-  write_csv("optim-ppm-par.csv")
+  write_csv("output/optim-ppm-par.csv")
 
 p <- plot_experiments(res)
 ggsave(paste0("output/plots/plot ", format(Sys.time()), " .png"), plot = p, 

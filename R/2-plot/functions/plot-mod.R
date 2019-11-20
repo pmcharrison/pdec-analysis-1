@@ -25,6 +25,9 @@ plot_mod <- function(par, opt) {
             train = TRUE,
             predict = FALSE, 
             zero_indexed = TRUE)
+  boundary_1 <- par$buffer_length_items
+  boundary_2 <- boundary_1 + par$stm_duration / opt$tone_length
+  
   tibble(time = time,
          pos = seq_along(time),
          weight = map2_dbl(time, pos, ~ get_weight(mod, 
@@ -33,11 +36,15 @@ plot_mod <- function(par, opt) {
                                                    pos = .y,  
                                                    update_excluded = FALSE,
                                                    zero_indexed = TRUE))) %>% 
-    ggplot(aes(time, weight)) + 
+    ggplot(aes(pos, weight)) + 
     geom_line() + 
-    scale_x_continuous("Time") +
+    scale_x_continuous("Tone number",
+                       sec.axis = sec_axis(trans = ~ . * opt$tone_length, 
+                                           name = "Time (s)")) +
     scale_y_continuous("Weight", limits = c(0, NA)) +
-    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = boundary_1, linetype = "dotted") +
+    geom_vline(xintercept = boundary_2, linetype = "dotted") +
+    # geom_hline(yintercept = 0, linetype = "dotted") +
     ggpubr::theme_pubr() +
     theme(aspect.ratio = 1)
 }
