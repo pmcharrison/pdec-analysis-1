@@ -59,6 +59,13 @@ res <- analyse_experiments(data, opt, ppm_par)
 saveRDS(res, "output/model-results.rds")
 saveRDS(ppm_par, "output/ppm-par.rds")
 saveRDS(opt, "output/opt.rds")
+
+ppm_par$optim %>% {
+  tibble(Parameter = names(.),
+         Value = unlist(.))
+} %>% 
+  write_csv("optim-ppm-par.csv")
+
 p <- plot_experiments(res)
 ggsave(paste0("output/plots/plot ", format(Sys.time()), " .png"), plot = p, 
        width = 5, height = 9)
