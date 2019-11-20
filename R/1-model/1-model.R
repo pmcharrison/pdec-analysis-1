@@ -57,6 +57,8 @@ dat <- readRDS(file = "output/data-00-participants.rds")
 
 res <- analyse_experiments(data, opt, ppm_par)
 saveRDS(res, "output/model-results.rds")
+saveRDS(ppm_par, "output/ppm-par.rds")
+saveRDS(opt, "output/opt.rds")
 p <- plot_experiments(res)
 ggsave(paste0("output/plots/plot ", format(Sys.time()), " .png"), plot = p, 
        width = 5, height = 9)

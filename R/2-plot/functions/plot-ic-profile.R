@@ -34,7 +34,8 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA),
               ic_se = ic_sd / sqrt(n),
               ic_upper_95 = ic_mean + 1.96 * ic_se,
               ic_lower_95 = ic_mean - 1.96 * ic_se) %>% 
-    filter(rel_pos >= -10) %>% 
+    {if (is.na(xlim[1])) . else filter(., rel_pos >= xlim[1])} %>% 
+    {if (is.na(xlim[2])) . else filter(., rel_pos <= xlim[2])} %>% 
     ggplot(aes(rel_pos, ic_mean, ymin = ic_lower_95, ymax = ic_upper_95, 
                colour = block, fill = block)) +
     {if (loess) 
@@ -49,7 +50,8 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA),
     scale_y_continuous("Information content") + 
     scale_colour_viridis_d(NULL) +
     scale_fill_viridis_d(NULL) +
-    theme(aspect.ratio = 1)
+    theme(aspect.ratio = 1,
+          legend.position = c(0.8, 0.8))
   
   if (ribbon) p <- p + geom_ribbon(alpha = 0.2, linetype = "blank")
   
