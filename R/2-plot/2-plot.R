@@ -8,7 +8,7 @@ model_results <- readRDS("output/model-results.rds")
 invisible(suppressMessages(capture.output(p <- plot_experiments(model_results))))
 ggsave("output/plots/all-experiments.png", plot = p, width = 6, height = 12, dpi = 300)
 
-plot_ic_profile(model_results$exp_1$optim, opt, xlim = c(-10, 40))
+plot_ic_profile(model_results$exp_1$optim, opt, loess = FALSE, xlim = c(-10, 40))
 ggsave("output/plots/ic-profile-block-1-v-5.png", width = 5, height = 5, dpi = 300)
 
 plot_mod(ppm_par$optim, opt)
