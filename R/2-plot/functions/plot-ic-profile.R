@@ -36,7 +36,11 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA),
               ic_lower_95 = ic_mean - 1.96 * ic_se) %>% 
     {if (is.na(xlim[1])) . else filter(., rel_pos >= xlim[1])} %>% 
     {if (is.na(xlim[2])) . else filter(., rel_pos <= xlim[2])} %>% 
-    ggplot(aes(rel_pos, ic_mean, ymin = ic_lower_95, ymax = ic_upper_95, 
+    ggplot(aes(rel_pos, ic_mean, 
+               ymin = ic_mean - ic_se,
+               ymax = ic_mean + ic_se,
+               # ymin = ic_lower_95, 
+               # ymax = ic_upper_95, 
                colour = block, fill = block)) +
     {if (loess) 
       geom_smooth(span = span, method = "loess", se = FALSE) else

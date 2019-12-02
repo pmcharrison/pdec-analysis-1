@@ -11,8 +11,11 @@ ggsave("output/plots/all-experiments.png", plot = p, width = 6, height = 12, dpi
 plot_ic_profile(model_results$exp_1$optim, opt, loess = FALSE, xlim = c(-10, 40))
 ggsave("output/plots/ic-profile-block-1-v-5.png", width = 5, height = 5, dpi = 300)
 
-plot_mod(ppm_par$optim, opt)
+plot_mod(ppm_par$optim, opt, max_time = 25)
 ggsave("output/plots/optim-memory-profile.png", width = 4, height = 4, dpi = 300)
+
+plot_mod(ppm_par$optim, opt, max_time = 5, plot_boundary_2 = FALSE)
+ggsave("output/plots/optim-memory-profile-short.png", width = 4, height = 4, dpi = 300)
 
 if (FALSE) {
   plot_individual_par(optimised_par) %>% 

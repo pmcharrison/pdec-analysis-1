@@ -1,7 +1,7 @@
 plot_experiments <- function(res) {
   panel_1 <- egg::ggarrange(
     plot_blocks(res$exp_1$orig, error_bar = TRUE, line = TRUE, ribbon = FALSE) + theme(legend.position = "none"),
-    plot_blocks(res$exp_1$optim, error_bar = TRUE, line = TRUE, ribbon = TRUE) + scale_y_continuous(NULL),
+    plot_blocks(res$exp_1$optim, error_bar = TRUE, line = TRUE, ribbon = FALSE) + scale_y_continuous(NULL),
     nrow = 1
   )
   
@@ -44,10 +44,10 @@ plot_experiments <- function(res) {
     p1 <- plot_blocks(
       z %>% filter(block %in% 1:4), 
       cond_list = c(
-        "#1471B9" = "RANREG",
-        "#EEC00D" = "RANREGr",
-        "#CD534B" = "REPinRAN",
-        "#00FF00" = "REPinRANr"
+        "#0073C2FF" = "RANREG",
+        "#EFC00099" = "RANREGr",
+        "#CD534CFF" = "REPinRAN",
+        "green" = "REPinRANr"
       ), 
       subtract_1_sec_from = c("RANREG", "RANREGr"),
       error_bar = TRUE, ribbon = FALSE
@@ -56,9 +56,9 @@ plot_experiments <- function(res) {
     p2 <- plot_block(z, 
                block = 5,
                cond_list = c(
-                 "#1471B9" = "RANREG",
-                 "#EEC00D" = "RANREGr",
-                 "#00FF00" = "REPinRANr"
+                 "#0073C2FF" = "RANREG",
+                 "#EFC00099" = "RANREGr",
+                 "green" = "REPinRANr"
                ),
                subtract_1_sec_from = c("RANREG", "RANREGr", "REPinRANr"))
     list(blocks_1_to_4 = p1, 
@@ -94,9 +94,9 @@ plot_experiments <- function(res) {
 plot_block_5_by_presentation <- function(
   exp_7, 
   cond_list = c(
-    "#1471B9" = "RANREG",
-    "#EEC00D" = "RANREGr",
-    "#00FF00" = "REPinRANr"
+    "#0073C2FF" = "RANREG",
+    "#EFC00099" = "RANREGr",
+    "green" = "REPinRANr"
   )) {
   exp_7 %>% 
     filter(block == 5 &
@@ -119,13 +119,19 @@ plot_block_5_by_presentation <- function(
                  values_to = "model_reaction_time") %>% 
     group_by(rep, name) %>% 
     summarise_model_rt(na.rm = TRUE) %>% 
-    ggplot(aes(rep, rt_mean, ymin = rt_95_lower, ymax = rt_95_upper, fill = name)) + 
+    ggplot(aes(rep,
+               rt_mean,
+               ymin = rt_mean - rt_se,
+               ymax = rt_mean + rt_se,
+               # ymin = rt_95_lower, 
+               # ymax = rt_95_upper, 
+               fill = name)) + 
     geom_bar(stat = "identity", position = position_dodge(width = 1)) + 
-    geom_errorbar(width = 0.3, position = position_dodge(width = 1)) +
+    geom_errorbar(width = 0, alpha = 0.6, position = position_dodge(width = 1)) +
     scale_x_continuous(NULL) +
     scale_y_continuous("RT advantage (s)") + 
-    scale_fill_manual(NULL, values = c("RANREG - RANREGr*" = "#00FF00",
-                                       "RANREG - RANREGr" = "#EEC00D")) +
+    scale_fill_manual(NULL, values = c("RANREG - RANREGr*" = "green",
+                                       "RANREG - RANREGr" = "#EFC00099")) +
     guides(fill = guide_legend(reverse = TRUE)) + 
     theme(aspect.ratio = 1)
 }

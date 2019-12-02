@@ -1,7 +1,7 @@
 library(tidyverse)
 library(ppm)
 
-plot_mod <- function(par, opt) {
+plot_mod <- function(par, opt, max_time = 25, plot_boundary_2 = TRUE) {
   mod <- new_ppm_decay(
     alphabet_size = 10000,
     order_bound = par$order_bound, 
@@ -17,7 +17,7 @@ plot_mod <- function(par, opt) {
     only_learn_from_buffer = par$only_learn_from_buffer, 
     only_predict_from_buffer = par$only_predict_from_buffer
   )
-  time <- seq(from = 0, to = 25, by = opt$tone_length)
+  time <- seq(from = 0, to = max_time, by = opt$tone_length)
   seq = seq_along(time)
   model_seq(mod,
             seq = seq,
@@ -28,7 +28,7 @@ plot_mod <- function(par, opt) {
   boundary_1 <- par$buffer_length_items
   boundary_2 <- boundary_1 + par$stm_duration / opt$tone_length
   
-  tibble(time = time,
+  p <- tibble(time = time,
          pos = seq_along(time),
          weight = map2_dbl(time, pos, ~ get_weight(mod, 
                                                    n_gram = 1,
@@ -43,12 +43,13 @@ plot_mod <- function(par, opt) {
                                            name = "Time (s)")) +
     scale_y_continuous("Weight", limits = c(0, NA)) +
     geom_vline(xintercept = boundary_1, linetype = "dotted") +
-    geom_vline(xintercept = boundary_2, linetype = "dotted") +
-    # geom_hline(yintercept = 0, linetype = "dotted") +
     ggpubr::theme_pubr() +
     theme(aspect.ratio = 1)
+  if (plot_boundary_2) {
+    p <- p + geom_vline(xintercept = boundary_2, linetype = "dotted")
+  } 
+  p
 }
-# 
 # plot_mod()
 # plot_mod(stm_duration = 0,
 #          ltm_weight = 0.25,

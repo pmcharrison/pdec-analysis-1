@@ -8,6 +8,7 @@ opt <- list(
   response_time = 1,
   cp = list(
     method = "Mann-Whitney",
+    # method = "Lepage",
     t1_error_rate = 10000,
     startup = 20 
   )
