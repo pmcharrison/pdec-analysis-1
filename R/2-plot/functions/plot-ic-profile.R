@@ -11,22 +11,38 @@ get_ic_profile_data <- function(x) {
 }
 
 plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA), 
-                            ribbon = TRUE) {
-  p <- x %>% 
+                            ribbon = TRUE, plot_points = FALSE) {
+
+  df <- x %>% 
     filter(!is.na(cond)) %>% 
     filter(cond == "TARGET" & block %in% c(1, 5)) %>% 
     select(block, transition, mod_pos_when_change_detected, mod) %>% 
-    mutate(block = paste("Block", block)) %>% 
-    select(block, transition, mod) %>% 
-    pmap(function(block, transition, mod) {
-      tibble(
-        block = block,
-        pos = mod$pos - mod$pos[1] + 1L,
-        rel_pos = pos - transition,
-        information_content = mod$information_content
-      )
-    }) %>% 
-    bind_rows() %>% 
+    mutate(block = paste("Block", block))
+  
+  unwrap <- function(df) {
+    df %>% 
+      select(block, transition, mod) %>% 
+      pmap(function(block, transition, mod) {
+        tibble(
+          block = block,
+          pos = mod$pos - mod$pos[1] + 1L,
+          rel_pos = pos - transition,
+          information_content = mod$information_content
+        )
+      }) %>% 
+      bind_rows() %>% 
+      {if (is.na(xlim[1])) . else filter(., rel_pos >= xlim[1])} %>% 
+      {if (is.na(xlim[2])) . else filter(., rel_pos <= xlim[2])}
+  }
+  
+  df2 <- df %>% 
+    group_by(block) %>% 
+    summarise(transition = transition[1],
+              mod = mod[1]) %>% 
+    unwrap()
+  
+  p <- df %>%
+    unwrap() %>% 
     group_by(block, rel_pos) %>% 
     summarise(ic_mean = mean(information_content),
               ic_sd = sd(information_content),
@@ -34,8 +50,6 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA),
               ic_se = ic_sd / sqrt(n),
               ic_upper_95 = ic_mean + 1.96 * ic_se,
               ic_lower_95 = ic_mean - 1.96 * ic_se) %>% 
-    {if (is.na(xlim[1])) . else filter(., rel_pos >= xlim[1])} %>% 
-    {if (is.na(xlim[2])) . else filter(., rel_pos <= xlim[2])} %>% 
     ggplot(aes(rel_pos, ic_mean, 
                ymin = ic_mean - ic_se,
                ymax = ic_mean + ic_se,
@@ -50,7 +64,8 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA),
     scale_x_continuous("Tone number", 
                        sec.axis = sec_axis(~ (.) * opt$tone_length,
                                            name = "Time (s)"),
-                       limits = xlim) +
+                       limits = xlim, 
+                       breaks = c(0, 20, 40)) +
     scale_y_continuous("Information content") + 
     scale_colour_viridis_d(NULL) +
     scale_fill_viridis_d(NULL) +
@@ -58,6 +73,14 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA),
           legend.position = c(0.8, 0.8))
   
   if (ribbon) p <- p + geom_ribbon(alpha = 0.2, linetype = "blank")
+  
+  if (plot_points) {
+   p <- p + 
+      geom_point(aes(x = rel_pos, y = information_content, colour = block, fill = block), 
+                 inherit.aes = FALSE,
+                 data = df2,
+                 alpha = 0.5)
+  }
   
   p
   # geom_vline(aes(xintercept = mod_pos_when_change_detected), df2, linetype = "dashed") +
