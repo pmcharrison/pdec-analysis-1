@@ -51,8 +51,10 @@ plot_ic_profile <- function(x, opt, loess = TRUE, span = 0.1, xlim = c(NA, NA),
               ic_upper_95 = ic_mean + 1.96 * ic_se,
               ic_lower_95 = ic_mean - 1.96 * ic_se) %>% 
     ggplot(aes(rel_pos, ic_mean, 
-               ymin = ic_mean - ic_se,
-               ymax = ic_mean + ic_se,
+               # ymin = ic_mean - ic_se,
+               # ymax = ic_mean + ic_se,
+               ymin = ic_mean - ic_sd,
+               ymax = ic_mean + ic_sd,
                # ymin = ic_lower_95, 
                # ymax = ic_upper_95, 
                colour = block, fill = block)) +
