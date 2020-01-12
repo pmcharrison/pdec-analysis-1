@@ -2,6 +2,8 @@ source("R/1-model/1-setup.R")
 library(tidyverse)
 theme_set(theme_bw())
 
+R.utils::mkdirs("output/plots")
+
 opt <- list(
   seq_length = 20L, # number of tones
   tone_length = 0.05,
