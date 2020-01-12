@@ -1,6 +1,8 @@
 source("R/2-plot/2-setup.R")
 source("R/1-model/functions/plot-experiments.R")
 
+R.utils::mkdirs("output/plots")
+
 opt <- readRDS("output/opt.rds")
 ppm_par <- readRDS("output/ppm-par.rds")
 model_results <- readRDS("output/model-results.rds")
