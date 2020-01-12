@@ -70,5 +70,3 @@ ppm_par$optim %>% {
   write_csv("output/optim-ppm-par.csv")
 
 p <- plot_experiments(res)
-ggsave(paste0("output/plots/plot ", format(Sys.time()), " .png"), plot = p, 
-       width = 5, height = 9)
