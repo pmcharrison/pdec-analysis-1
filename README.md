@@ -21,7 +21,7 @@ install.packages("devtools")
 Then install the `ppm` package from GitHub: 
 
 ``` r
-devtools::install_github("pmcharrison/ppm@v0.1.1")
+devtools::install_github("pmcharrison/ppm@v0.2.0")
 ```
 
 Then install some other packages from CRAN:
