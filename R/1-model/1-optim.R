@@ -40,32 +40,31 @@ ppm_par_start <- list(
     
     noise = 1.3, # optim
     order_bound = 4
-  )
 )
 
 ppm_par_optimise <- list(
   stm_duration = c(0, 1e6),
-  ltm_weight = c(0, 1)
+  ltm_weight = c(0, 1),
   ltm_half_life = c(1e-3, 1e6),
   noise = c(0, 10)
 )
 
 #### Functions ####
 
-eval_par <- function(par, data, opt) {
-  stopifnot(length(par) == 4)
+optim_par <- function(ppm_par_start, ppm_par_optimise, dat, opt) {
   all_par <- ppm_par_start
-  all_par[c(
-    "stm_duration",
-    "ltm_weight",
-    "ltm_half_life",
-    "noise"
-  )] <- par
-  res <- analyse_experiments(dat[c("exp_1", "exp_4a")],
+  # all_par[c(
+  #   "stm_duration",
+  #   "ltm_weight",
+  #   "ltm_half_life",
+  #   "noise"
+  # )] <- par
+
+  res <- analyse_experiments(dat,
                              opt, 
-                             all_par)
+                             ppm_par = list(current_iteration = all_par))
   cost <- compute_cost(res)
-  stop("Here we want to save the current results, maybe in a summary figure".)
+  browser()
 }
 
 compute_cost <- function(res) {
@@ -75,7 +74,13 @@ compute_cost <- function(res) {
                        by = c("cond", "block")) %>% mutate(experiment = "1"),
     exp_4a = inner_join(get_exp_4a_behavioural_means(),
                         get_exp_4a_model_means(res),
-                        by = c("cond", "block")) %>% mutate(experiment = "4a")
+                        by = c("cond", "block")) %>% mutate(experiment = "4a"),
+    exp_7_blocks_1_to_4 = inner_join(get_exp_7_blocks_1_to_4_behavioural_means(),
+                                     get_exp_7_blocks_1_to_4_model_means(res),
+                                     by = c("cond", "block")) %>% mutate(experiment = "7_blocks_1_to_4"),
+    exp_7_block_5 = inner_join(get_exp_7_block_5_behavioural_means(),
+                                     get_exp_7_block_5_model_means(res),
+                                     by = c("cond", "block")) %>% mutate(experiment = "7_blocks_5"),
   ) %>% 
     mutate(abs_error = abs(model_rt - behavioural_rt)) %>% 
     pull(abs_error) %>% 
@@ -83,7 +88,7 @@ compute_cost <- function(res) {
 }
 
 get_exp_1_behavioural_means <- function() {
-  read_delim("input/behavioural-plot-data/exp1_retention_avg.txt", delim = "\t") %>% 
+  read_delim("input/behavioural-plot-data/exp1_retention_avg.txt", delim = "\t", col_types = cols()) %>% 
     pivot_longer(cols = starts_with(c("RANDREG", "TARGET"))) %>% 
     mutate(cond = gsub("_.*", "", name),
            block = gsub("[A-Z]*", "", name),
@@ -96,7 +101,7 @@ get_exp_1_behavioural_means <- function() {
 }
 
 get_exp_4a_behavioural_means <- function() {
-  read_delim("input/behavioural-plot-data/exp4a_interruption_avg.txt", delim = "\t") %>% 
+  read_delim("input/behavioural-plot-data/exp4a_interruption_avg.txt", delim = "\t", col_types = cols()) %>% 
     pivot_longer(cols = starts_with(c("RANDREG", "TARGET"))) %>% 
     mutate(cond = gsub("_.*", "", name),
            block = gsub("[A-Z]*", "", name),
@@ -107,19 +112,37 @@ get_exp_4a_behavioural_means <- function() {
     ungroup()
 }
 
+get_exp_7_blocks_1_to_4_behavioural_means <- function() {
+  browser()
+}
+
+get_exp_7_block_5_behavioural_means <- function() {
+  browser()
+}
+
+
 get_exp_1_model_means <- function(res) {
-  res$exp_1 %>% 
+  res$exp_1$current_iteration %>% 
     summarise_blocks(c("RANDREG", "TARGET"), subtract_1_sec_from = character()) %>% 
     select(cond, block, model_rt = rt_mean) %>% 
     mutate(cond = as.character(cond))
 }
 
 get_exp_4a_model_means <- function(res) {
-  res$exp_4a %>% 
+  res$exp_4a$current_iteration %>% 
     summarise_blocks(c("RANDREG", "TARGET"), subtract_1_sec_from = character()) %>% 
     select(cond, block, model_rt = rt_mean) %>% 
     mutate(cond = as.character(cond))
 }
+
+get_exp_7_blocks_1_to_4_model_means <- function() {
+  browser()
+}
+
+get_exp_7_block_5_model_means <- function() {
+  browser()
+}
+
 
 #### Body ####
 
@@ -128,17 +151,19 @@ if (FALSE) {
 }
 
 dat <- readRDS(file = "output/data-00-participants.rds")
+optim_par(ppm_par_start, ppm_par_optimise, dat, opt)
 
 
-res <- analyse_experiments(data, opt, ppm_par)
-saveRDS(res, "output/model-results.rds")
-saveRDS(ppm_par, "output/ppm-par.rds")
-saveRDS(opt, "output/opt.rds")
-
-ppm_par$optim %>% {
-  tibble(Parameter = names(.),
-         Value = unlist(.))
-} %>% 
-  write_csv("output/optim-ppm-par.csv")
-
-p <- plot_experiments(res)
+# 
+# res <- analyse_experiments(data, opt, ppm_par)
+# saveRDS(res, "output/model-results.rds")
+# saveRDS(ppm_par, "output/ppm-par.rds")
+# saveRDS(opt, "output/opt.rds")
+# 
+# ppm_par$optim %>% {
+#   tibble(Parameter = names(.),
+#          Value = unlist(.))
+# } %>% 
+#   write_csv("output/optim-ppm-par.csv")
+# 
+# p <- plot_experiments(res)
