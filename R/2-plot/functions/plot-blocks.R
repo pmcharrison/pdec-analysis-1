@@ -1,4 +1,5 @@
 library("ggsci")
+library(magrittr)
 
 plot_block <- function(x, 
                        block,
@@ -70,7 +71,8 @@ plot_blocks <- function(x,
                         line = TRUE) {
   p <- summarise_blocks(x, cond_list, subtract_1_sec_from) %>% 
     rename(Condition = cond) %>% 
-    print() %>% 
+    print() %T>% 
+    write_csv("temp.csv") %>% 
     ggplot(aes(x = block, y = rt_mean, 
                ymin = rt_mean - rt_se,
                ymax = rt_mean + rt_se,
